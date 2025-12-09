@@ -1,7 +1,6 @@
 // src/App.tsx
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import type { Icon } from 'leaflet';
 import L from 'leaflet';
 import { fetchIncidents } from './api/incidents';
 import type { Incident } from './api/incidents';
@@ -9,17 +8,54 @@ import type { Incident } from './api/incidents';
 // Centro de Lima aproximado
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
 
-// Fix para iconos de Leaflet (porque por defecto en bundlers no se ven)
-const defaultIcon = L.icon({
-  iconUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-}) as Icon;
+// Colores y emojis para cada tipo de incidente
+const incidentConfig: Record<string, { color: string; emoji: string }> = {
+  'ACCIDENT': { color: '#dc3545', emoji: '🚗' },
+  'CONGESTION': { color: '#ff9800', emoji: '🚦' },
+  'HAZARD': { color: '#e91e63', emoji: '⚠️' },
+  'POLICE': { color: '#0056b3', emoji: '🚓' },
+  'ROAD_CLOSED': { color: '#6f42c1', emoji: '🚧' },
+  'ROAD_HAZARD': { color: '#fd7e14', emoji: '⛔' },
+  'DISABLED_VEHICLE': { color: '#17a2b8', emoji: '🚙' },
+  'JAM': { color: '#ffc107', emoji: '🚥' },
+  'WEATHERHAZARD': { color: '#6c757d', emoji: '🌧️' },
+  'CONSTRUCTION': { color: '#795548', emoji: '🏗️' },
+  'OBJECT_IN_ROADWAY': { color: '#b71c1c', emoji: '📦' },
+};
+
+function getIncidentConfig(type: string) {
+  return incidentConfig[type] || { color: '#999999', emoji: '📍' };
+}
+
+// Función para crear iconos personalizados
+function createCustomIcon(type: string) {
+  const config = getIncidentConfig(type);
+  
+  const html = `
+    <div style="
+      background-color: ${config.color};
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-size: 20px;
+    ">
+      ${config.emoji}
+    </div>
+  `;
+
+  return L.divIcon({
+    html: html,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: 'custom-icon'
+  });
+}
 
 function formatCategory(cat: string | null): string {
   if (!cat) return 'sin categoría';
@@ -159,7 +195,7 @@ export default function App() {
           />
 
           {filteredIncidents.map((i) => (
-            <Marker key={i.id} position={[i.lat, i.lon]} icon={defaultIcon}>
+            <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type)}>
               <Popup>
                 <div style={{ fontSize: '12px' }}>
                   <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
