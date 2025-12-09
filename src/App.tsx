@@ -86,6 +86,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [closedIncidents, setClosedIncidents] = useState<Incident[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userName] = useState('Juan Pérez');
 
   // Obtener tipos únicos de incidentes
   const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
@@ -95,6 +99,11 @@ export default function App() {
     setError(null);
     try {
       const data = await fetchIncidents({ status: 'active', limit: 200 });
+      // Guardar los incidentes que desaparecieron
+      const newClosed = incidents.filter(old => !data.some(n => n.id === old.id));
+      if (newClosed.length > 0) {
+        setClosedIncidents(prev => [...newClosed, ...prev].slice(0, 50)); // Guardar últimos 50
+      }
       setIncidents(data);
     } catch (e) {
       console.error(e);
@@ -115,101 +124,189 @@ export default function App() {
     : incidents;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
-      {/* Panel lateral */}
-      <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }} className="bg-light">
-        <h2 className="mb-3 h4">🚨 Alertas viales</h2>
-        <small className="text-muted mb-3 d-block">Fuente: Waze (vía alertas-api)</small>
-
-        <div className="d-flex gap-2 mb-3">
-          <button onClick={load} disabled={loading} className="btn btn-primary btn-sm">
-            {loading ? 'Cargando...' : 'Refrescar'}
-          </button>
-          <span className="small align-self-center badge bg-info">
-            {filteredIncidents.length}
-          </span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
+      {/* Barra Superior */}
+      <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px' }}>
+        {/* Logo a la izquierda */}
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3' }}>
+          🚨 ALERTAS VIALES
         </div>
 
-        {error && (
-          <div className="alert alert-danger py-2 px-3 mb-3 small" role="alert">
-            {error}
-          </div>
-        )}
+        {/* Notificaciones y Usuario a la derecha */}
+        <div className="d-flex gap-3 align-items-center" style={{ position: 'relative' }}>
+          {/* Campana de Notificaciones */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="btn btn-light p-2"
+              style={{ position: 'relative' }}
+            >
+              🔔
+              {closedIncidents.length > 0 && (
+                <span className="badge bg-danger" style={{ position: 'absolute', top: '0', right: '0', fontSize: '10px' }}>
+                  {closedIncidents.length}
+                </span>
+              )}
+            </button>
 
-        {/* Filtro por tipo */}
-        <div className="mb-3">
-          <label className="form-label small fw-bold">
-            Filtrar por tipo:
-          </label>
-          <select 
-            value={selectedType ?? ''} 
-            onChange={(e) => setSelectedType(e.target.value || null)}
-            className="form-select form-select-sm"
-          >
-            <option value="">Todos ({incidents.length})</option>
-            {incidentTypes.map((type) => {
-              const count = incidents.filter(i => i.type === type).length;
-              return (
-                <option key={type} value={type}>
-                  {getTypeInSpanish(type)} ({count})
-                </option>
-              );
-            })}
-          </select>
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', paddingTop: '8px' }}>
-          {filteredIncidents.length > 0 ? (
-            filteredIncidents.map((i) => (
-              <div key={i.id} className="border-bottom pb-2 mb-2 small">
-                <div className="fw-bold text-primary">{getTypeInSpanish(i.type)}</div>
-                <div className="text-muted" style={{ fontSize: '11px' }}>
-                  ({formatCategory(i.category)})
+            {/* Dropdown de Notificaciones */}
+            {showNotifications && (
+              <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '300px', maxHeight: '400px', overflowY: 'auto', zIndex: 1000, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <div className="p-3 border-bottom">
+                  <strong style={{ fontSize: '14px' }}>Alertas Cerradas</strong>
                 </div>
-                <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                  {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-                </div>
-                <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
-                  ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
-                </div>
+                {closedIncidents.length > 0 ? (
+                  <div>
+                    {closedIncidents.map((i) => (
+                      <div key={i.id} className="p-2 border-bottom small" style={{ fontSize: '12px' }}>
+                        <div className="fw-bold text-danger">✓ {getTypeInSpanish(i.type)}</div>
+                        <div className="text-muted" style={{ fontSize: '11px' }}>
+                          {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 text-muted text-center" style={{ fontSize: '12px' }}>
+                    No hay alertas cerradas
+                  </div>
+                )}
               </div>
-            ))
-          ) : (
-            <div className="text-muted text-center small" style={{ paddingTop: '20px' }}>
-              No hay incidentes de este tipo
+            )}
+          </div>
+
+          {/* Usuario */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="btn btn-light p-2 d-flex align-items-center gap-2"
+              style={{ fontSize: '14px' }}
+            >
+              <img 
+                src="https://via.placeholder.com/32" 
+                alt="User" 
+                style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+              />
+              <span>{userName}</span>
+            </button>
+
+            {/* Dropdown de Usuario */}
+            {showUserMenu && (
+              <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 1000, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  👤 Mi Perfil
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  ⚙️ Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  🔒 Cambiar Contraseña
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark hover-light" style={{ fontSize: '14px', color: '#dc3545' }}>
+                  🚪 Cerrar Sesión
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Contenedor principal con panel y mapa */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Panel lateral */}
+        <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }} className="bg-light">
+          <h2 className="mb-3 h5">Incidentes Activos</h2>
+
+          <div className="d-flex gap-2 mb-3">
+            <button onClick={load} disabled={loading} className="btn btn-primary btn-sm">
+              {loading ? 'Cargando...' : 'Refrescar'}
+            </button>
+            <span className="small align-self-center badge bg-info">
+              {filteredIncidents.length}
+            </span>
+          </div>
+
+          {error && (
+            <div className="alert alert-danger py-2 px-3 mb-3 small" role="alert">
+              {error}
             </div>
           )}
-        </div>
-      </aside>
 
-      {/* Mapa */}
-      <div style={{ flex: 1, height: '100%', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
-        <MapContainer
-          center={LIMA_CENTER}
-          zoom={12}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          {/* Filtro por tipo */}
+          <div className="mb-3">
+            <label className="form-label small fw-bold">
+              Filtrar por tipo:
+            </label>
+            <select 
+              value={selectedType ?? ''} 
+              onChange={(e) => setSelectedType(e.target.value || null)}
+              className="form-select form-select-sm"
+            >
+              <option value="">Todos ({incidents.length})</option>
+              {incidentTypes.map((type) => {
+                const count = incidents.filter(i => i.type === type).length;
+                return (
+                  <option key={type} value={type}>
+                    {getTypeInSpanish(type)} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
 
-          {filteredIncidents.map((i) => (
-            <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type)}>
-              <Popup>
-                <div style={{ fontSize: '12px' }}>
-                  <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
-                  <br />
-                  {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-                  <br />
-                  Prioridad: {i.priority ?? '-'}
-                  <br />
-                  Confiabilidad: {i.reliability ?? '-'}
+          <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', paddingTop: '8px' }}>
+            {filteredIncidents.length > 0 ? (
+              filteredIncidents.map((i) => (
+                <div key={i.id} className="border-bottom pb-2 mb-2 small">
+                  <div className="fw-bold text-primary">{getTypeInSpanish(i.type)}</div>
+                  <div className="text-muted" style={{ fontSize: '11px' }}>
+                    ({formatCategory(i.category)})
+                  </div>
+                  <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                    {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                  </div>
+                  <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
+                    ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
+                  </div>
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+              ))
+            ) : (
+              <div className="text-muted text-center small" style={{ paddingTop: '20px' }}>
+                No hay incidentes de este tipo
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Mapa */}
+        <div style={{ flex: 1, height: '100%', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+          <MapContainer
+            center={LIMA_CENTER}
+            zoom={12}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution="&copy; OpenStreetMap contributors"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {filteredIncidents.map((i) => (
+              <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type)}>
+                <Popup>
+                  <div style={{ fontSize: '12px' }}>
+                    <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
+                    <br />
+                    {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                    <br />
+                    Prioridad: {i.priority ?? '-'}
+                    <br />
+                    Confiabilidad: {i.reliability ?? '-'}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
       </div>
     </div>
   );
