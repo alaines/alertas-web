@@ -8,6 +8,9 @@ import type { Incident } from './api/incidents';
 // Centro de Lima aproximado
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
 
+// Configuración de actualización automática (en milisegundos)
+const AUTO_REFRESH_INTERVAL = 60000; // 60 segundos - personalizable
+
 // Colores y iconos para cada tipo de incidente
 const incidentConfig: Record<string, { color: string; icon: string }> = {
   'ACCIDENT': { color: '#dc3545', icon: 'fas fa-car-crash' },
@@ -28,12 +31,14 @@ function getIncidentConfig(type: string) {
 }
 
 // Función para crear iconos personalizados
-function createCustomIcon(type: string) {
+function createCustomIcon(type: string, isClosed = false) {
   const config = getIncidentConfig(type);
+  const backgroundColor = isClosed ? '#6c757d' : config.color; // Gris para cerrados
+  const opacity = isClosed ? '0.7' : '1';
   
   const html = `
     <div style="
-      background-color: ${config.color};
+      background-color: ${backgroundColor};
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -42,6 +47,7 @@ function createCustomIcon(type: string) {
       justify-content: center;
       border: 3px solid white;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      opacity: ${opacity};
     ">
       <i class="${config.icon}" style="color: white; font-size: 20px;"></i>
     </div>
@@ -101,10 +107,14 @@ export default function App() {
     setError(null);
     try {
       const data = await fetchIncidents({ status: 'active', limit: 200 });
-      // Guardar los incidentes que desaparecieron
-      const newClosed = incidents.filter(old => !data.some(n => n.id === old.id));
+      // Guardar los incidentes que desaparecieron con timestamp
+      const newClosed = incidents.filter(old => !data.some(n => n.id === old.id)).map(inc => ({
+        ...inc,
+        closedAt: new Date().toISOString(),
+        closedBy: 'Waze'
+      }));
       if (newClosed.length > 0) {
-        setClosedIncidents(prev => [...newClosed, ...prev].slice(0, 50)); // Guardar últimos 50
+        setClosedIncidents(prev => [...newClosed, ...prev].slice(0, 100));
       }
       setIncidents(data);
     } catch (e) {
@@ -116,9 +126,19 @@ export default function App() {
     }
   };
 
+  // Cargar incidentes al inicio
   useEffect(() => {
     load();
   }, []);
+
+  // Auto-refresh periódico
+  useEffect(() => {
+    const interval = setInterval(() => {
+      load();
+    }, AUTO_REFRESH_INTERVAL);
+    
+    return () => clearInterval(interval);
+  }, [incidents]);
 
   // Inicializar capas visibles cuando se cargan los incidentes
   useEffect(() => {
@@ -137,10 +157,22 @@ export default function App() {
     setVisibleLayers(newLayers);
   };
 
+  // Obtener incidentes cerrados en últimos 5 minutos
+  const recentlyClosedIncidents = closedIncidents.filter(inc => {
+    if (!inc.closedAt) return false;
+    const closedTime = new Date(inc.closedAt).getTime();
+    const now = new Date().getTime();
+    const fiveMinutes = 5 * 60 * 1000;
+    return (now - closedTime) < fiveMinutes;
+  });
+
+  // Combinar incidentes activos con recientemente cerrados
+  const allIncidents = [...incidents, ...recentlyClosedIncidents];
+
   // Filtrar incidentes por tipo seleccionado y por capas visibles
   const filteredIncidents = selectedType 
-    ? incidents.filter(i => i.type === selectedType && visibleLayers.has(i.type))
-    : incidents.filter(i => visibleLayers.has(i.type));
+    ? allIncidents.filter(i => i.type === selectedType && visibleLayers.has(i.type))
+    : allIncidents.filter(i => visibleLayers.has(i.type));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
@@ -237,29 +269,38 @@ export default function App() {
         </div>
       </header>
 
+      {/* Botón fijo para mostrar/ocultar panel lateral */}
+      <button
+        onClick={() => setShowSidebar(!showSidebar)}
+        className="btn btn-light p-2"
+        style={{
+          position: 'fixed',
+          top: '76px',
+          left: showSidebar ? '356px' : '12px',
+          zIndex: 3000,
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          minWidth: '40px',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+          backgroundColor: 'white'
+        }}
+        title={showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
+      >
+        <i className="fas fa-bars" style={{ fontSize: '16px' }}></i>
+      </button>
+
       {/* Contenedor principal con panel y mapa */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Panel lateral */}
         {showSidebar && (
         <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box', position: 'relative' }} className="bg-light">
-          {/* Botón para ocultar panel */}
-          <button 
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="btn btn-light p-2"
-            style={{ position: 'absolute', top: '12px', right: '-45px', border: '1px solid #ddd', borderRadius: '0 4px 4px 0', zIndex: 100, backgroundColor: 'white' }}
-            title="Ocultar panel"
-          >
-            <i className="fas fa-bars"></i>
-          </button>
           <h2 className="mb-3 h5">Incidentes Activos</h2>
 
           <div className="d-flex gap-2 mb-3">
-            <button onClick={load} disabled={loading} className="btn btn-primary btn-sm">
-              {loading ? 'Cargando...' : 'Refrescar'}
-            </button>
             <span className="small align-self-center badge bg-info">
-              {filteredIncidents.length}
+              {filteredIncidents.length} incidentes
             </span>
+            {loading && <span className="small text-muted">Actualizando...</span>}
           </div>
 
           {error && (
@@ -278,9 +319,9 @@ export default function App() {
               onChange={(e) => setSelectedType(e.target.value || null)}
               className="form-select form-select-sm"
             >
-              <option value="">Todos ({incidents.length})</option>
+              <option value="">Todos ({allIncidents.length})</option>
               {incidentTypes.map((type) => {
-                const count = incidents.filter(i => i.type === type).length;
+                const count = allIncidents.filter(i => i.type === type).length;
                 return (
                   <option key={type} value={type}>
                     {getTypeInSpanish(type)} ({count})
@@ -292,20 +333,31 @@ export default function App() {
 
           <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', paddingTop: '8px' }}>
             {filteredIncidents.length > 0 ? (
-              filteredIncidents.map((i) => (
-                <div key={i.id} className="border-bottom pb-2 mb-2 small">
-                  <div className="fw-bold text-primary">{getTypeInSpanish(i.type)}</div>
-                  <div className="text-muted" style={{ fontSize: '11px' }}>
-                    ({formatCategory(i.category)})
+              filteredIncidents.map((i) => {
+                const isClosed = !!i.closedAt;
+                return (
+                  <div key={i.id} className="border-bottom pb-2 mb-2 small" style={{ opacity: isClosed ? 0.7 : 1 }}>
+                    <div className="fw-bold text-primary">
+                      {getTypeInSpanish(i.type)}
+                      {isClosed && <span className="badge bg-secondary ms-2" style={{ fontSize: '9px' }}>CERRADO</span>}
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '11px' }}>
+                      ({formatCategory(i.category)})
+                    </div>
+                    <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                      {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                    </div>
+                    <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
+                      ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
+                    </div>
+                    {isClosed && (
+                      <div className="text-muted" style={{ fontSize: '10px', marginTop: '2px' }}>
+                        Cerrado por {i.closedBy ?? 'Waze'}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                    {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-                  </div>
-                  <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
-                    ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-muted text-center small" style={{ paddingTop: '20px' }}>
                 No hay incidentes de este tipo
@@ -315,20 +367,9 @@ export default function App() {
         </aside>
         )}
 
-        {/* Botón para mostrar panel cuando está oculto */}
-        {!showSidebar && (
-          <button 
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="btn btn-light p-2"
-            style={{ borderRight: '1px solid #ddd', borderRadius: 0, minWidth: '40px' }}
-            title="Mostrar panel"
-          >
-            <i className="fas fa-bars" style={{ fontSize: '16px' }}></i>
-          </button>
-        )}
-
         {/* Mapa */}
         <div style={{ flex: 1, height: '100%', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+
           {/* Panel de Filtros de Capas */}
           <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1000, backgroundColor: 'white', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -336,7 +377,7 @@ export default function App() {
               Capas
             </div>
             {incidentTypes.map((type) => {
-              const count = incidents.filter(i => i.type === type).length;
+              const count = allIncidents.filter(i => i.type === type).length;
               const isVisible = visibleLayers.has(type);
               const config = getIncidentConfig(type);
               return (
@@ -366,21 +407,36 @@ export default function App() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {filteredIncidents.map((i) => (
-              <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type)}>
-                <Popup>
-                  <div style={{ fontSize: '12px' }}>
-                    <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
-                    <br />
-                    {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-                    <br />
-                    Prioridad: {i.priority ?? '-'}
-                    <br />
-                    Confiabilidad: {i.reliability ?? '-'}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {filteredIncidents.map((i) => {
+              const isClosed = !!i.closedAt;
+              return (
+                <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type, isClosed)}>
+                  <Popup>
+                    <div style={{ fontSize: '12px' }}>
+                      <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
+                      <br />
+                      {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                      <br />
+                      Prioridad: {i.priority ?? '-'}
+                      <br />
+                      Confiabilidad: {i.reliability ?? '-'}
+                      {isClosed && (
+                        <>
+                          <br />
+                          <span style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                            ⚠️ CERRADO
+                          </span>
+                          <br />
+                          <span style={{ fontSize: '11px', color: '#6c757d' }}>
+                            Cerrado por: {i.closedBy ?? 'Waze'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
       </div>

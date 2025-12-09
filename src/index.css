@@ -66,10 +66,10 @@ button:focus-visible {
 }
 
 /* Leaflet Zoom Controls - Posicionar en la esquina inferior derecha */
-.leaflet-bottom {
-  bottom: 20px !important;
-}
-
-.leaflet-right {
+.leaflet-container .leaflet-control-zoom {
+  position: fixed !important;
+  bottom: 80px !important;
   right: 20px !important;
+  left: auto !important;
+  top: auto !important;
 }

@@ -21,6 +21,8 @@ export interface Incident {
   lat: number;
   lon: number;
   distance?: number;
+  closedAt?: string;     // timestamp cuando fue cerrado
+  closedBy?: string;     // quién lo cerró (ej: "Waze")
 }
 
 // Datos de prueba para desarrollo
