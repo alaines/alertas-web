@@ -26,6 +26,25 @@ function formatCategory(cat: string | null): string {
   return cat;
 }
 
+// Mapeo de tipos a español
+const typeTranslations: Record<string, string> = {
+  'ACCIDENT': 'Accidente',
+  'CONGESTION': 'Congestión',
+  'HAZARD': 'Peligro',
+  'POLICE': 'Policía',
+  'ROAD_CLOSED': 'Vía Cerrada',
+  'ROAD_HAZARD': 'Peligro en la Vía',
+  'DISABLED_VEHICLE': 'Vehículo Descompuesto',
+  'JAM': 'Embotellamiento',
+  'WEATHERHAZARD': 'Peligro Climático',
+  'CONSTRUCTION': 'Construcción',
+  'OBJECT_IN_ROADWAY': 'Objeto en la Vía',
+};
+
+function getTypeInSpanish(type: string): string {
+  return typeTranslations[type] || type;
+}
+
 export default function App() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,41 +81,41 @@ export default function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
       {/* Panel lateral */}
-      <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }}>
-        <h2 style={{ margin: '0 0 8px 0' }}>Alertas viales</h2>
-        <small style={{ color: '#666', marginBottom: '12px' }}>Fuente: Waze (vía alertas-api)</small>
+      <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }} className="bg-light">
+        <h2 className="mb-3 h4">🚨 Alertas viales</h2>
+        <small className="text-muted mb-3 d-block">Fuente: Waze (vía alertas-api)</small>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-          <button onClick={load} disabled={loading} style={{ padding: '6px 12px', cursor: loading ? 'not-allowed' : 'pointer' }}>
+        <div className="d-flex gap-2 mb-3">
+          <button onClick={load} disabled={loading} className="btn btn-primary btn-sm">
             {loading ? 'Cargando...' : 'Refrescar'}
           </button>
-          <span style={{ fontSize: '12px', alignSelf: 'center' }}>
-            Activos: {filteredIncidents.length}
+          <span className="small align-self-center badge bg-info">
+            {filteredIncidents.length}
           </span>
         </div>
 
         {error && (
-          <div style={{ color: 'white', background: '#dc3545', padding: '8px', borderRadius: '4px', fontSize: '12px', marginBottom: '12px' }}>
+          <div className="alert alert-danger py-2 px-3 mb-3 small" role="alert">
             {error}
           </div>
         )}
 
         {/* Filtro por tipo */}
-        <div style={{ marginBottom: '12px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+        <div className="mb-3">
+          <label className="form-label small fw-bold">
             Filtrar por tipo:
           </label>
           <select 
             value={selectedType ?? ''} 
             onChange={(e) => setSelectedType(e.target.value || null)}
-            style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '4px', border: '1px solid #ddd' }}
+            className="form-select form-select-sm"
           >
             <option value="">Todos ({incidents.length})</option>
             {incidentTypes.map((type) => {
               const count = incidents.filter(i => i.type === type).length;
               return (
                 <option key={type} value={type}>
-                  {type} ({count})
+                  {getTypeInSpanish(type)} ({count})
                 </option>
               );
             })}
@@ -106,18 +125,21 @@ export default function App() {
         <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', paddingTop: '8px' }}>
           {filteredIncidents.length > 0 ? (
             filteredIncidents.map((i) => (
-              <div key={i.id} style={{ borderBottom: '1px solid #eee', paddingBottom: '6px', marginBottom: '6px', fontSize: '12px' }}>
-                <strong>{i.type}</strong> ({formatCategory(i.category)})
-                <br />
-                {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-                <br />
-                <span style={{ color: '#777' }}>
-                  Prioridad: {i.priority ?? '-'} | Confiab.: {i.reliability ?? '-'}
-                </span>
+              <div key={i.id} className="border-bottom pb-2 mb-2 small">
+                <div className="fw-bold text-primary">{getTypeInSpanish(i.type)}</div>
+                <div className="text-muted" style={{ fontSize: '11px' }}>
+                  ({formatCategory(i.category)})
+                </div>
+                <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                  {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                </div>
+                <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
+                  ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
+                </div>
               </div>
             ))
           ) : (
-            <div style={{ color: '#999', fontSize: '12px', textAlign: 'center', paddingTop: '20px' }}>
+            <div className="text-muted text-center small" style={{ paddingTop: '20px' }}>
               No hay incidentes de este tipo
             </div>
           )}
@@ -140,7 +162,7 @@ export default function App() {
             <Marker key={i.id} position={[i.lat, i.lon]} icon={defaultIcon}>
               <Popup>
                 <div style={{ fontSize: '12px' }}>
-                  <strong>{i.type}</strong> ({formatCategory(i.category)})
+                  <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
                   <br />
                   {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
                   <br />
