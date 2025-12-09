@@ -246,10 +246,10 @@ export default function App() {
           <button 
             onClick={() => setShowSidebar(!showSidebar)}
             className="btn btn-light p-2"
-            style={{ position: 'absolute', top: '12px', right: '-40px', border: '1px solid #ddd', borderRadius: '0 4px 4px 0' }}
-            title={showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
+            style={{ position: 'absolute', top: '12px', right: '-45px', border: '1px solid #ddd', borderRadius: '0 4px 4px 0', zIndex: 100, backgroundColor: 'white' }}
+            title="Ocultar panel"
           >
-            <i className="fas fa-bars" style={{ fontSize: '16px' }}></i>
+            <i className="fas fa-bars"></i>
           </button>
           <h2 className="mb-3 h5">Incidentes Activos</h2>
 

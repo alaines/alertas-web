@@ -64,3 +64,12 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Leaflet Zoom Controls - Posicionar en la esquina inferior derecha */
+.leaflet-bottom {
+  bottom: 20px !important;
+}
+
+.leaflet-right {
+  right: 20px !important;
+}
