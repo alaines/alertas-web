@@ -308,6 +308,11 @@ export default function App() {
           </MapContainer>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-light border-top" style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: '#666' }}>
+        Alertas Viales - Derechos Reservados - 2025
+      </footer>
     </div>
   );
 }
