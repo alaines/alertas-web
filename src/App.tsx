@@ -90,9 +90,11 @@ export default function App() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userName] = useState('Aland Laines');
   const [userImage] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   // Obtener tipos únicos de incidentes
   const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
+  const [visibleLayers, setVisibleLayers] = useState<Set<string>>(new Set(incidentTypes));
 
   const load = async () => {
     setLoading(true);
@@ -118,19 +120,45 @@ export default function App() {
     load();
   }, []);
 
-  // Filtrar incidentes por tipo seleccionado
+  // Inicializar capas visibles cuando se cargan los incidentes
+  useEffect(() => {
+    if (incidentTypes.length > 0 && visibleLayers.size === 0) {
+      setVisibleLayers(new Set(incidentTypes));
+    }
+  }, [incidentTypes]);
+
+  const toggleLayer = (type: string) => {
+    const newLayers = new Set(visibleLayers);
+    if (newLayers.has(type)) {
+      newLayers.delete(type);
+    } else {
+      newLayers.add(type);
+    }
+    setVisibleLayers(newLayers);
+  };
+
+  // Filtrar incidentes por tipo seleccionado y por capas visibles
   const filteredIncidents = selectedType 
-    ? incidents.filter(i => i.type === selectedType)
-    : incidents;
+    ? incidents.filter(i => i.type === selectedType && visibleLayers.has(i.type))
+    : incidents.filter(i => visibleLayers.has(i.type));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
       {/* Barra Superior */}
       <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px' }}>
-        {/* Logo a la izquierda */}
-        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
-          ALERTAS VIALES
+        {/* Logo y botón toggle a la izquierda */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+            ALERTAS VIALES
+          </div>
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="btn btn-light p-2"
+            title={showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
+          >
+            <i className={`fas ${showSidebar ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
+          </button>
         </div>
 
         {/* Notificaciones y Usuario a la derecha */}
@@ -221,6 +249,7 @@ export default function App() {
       {/* Contenedor principal con panel y mapa */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Panel lateral */}
+        {showSidebar && (
         <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }} className="bg-light">
           <h2 className="mb-3 h5">Incidentes Activos</h2>
 
@@ -284,9 +313,37 @@ export default function App() {
             )}
           </div>
         </aside>
+        )}
 
         {/* Mapa */}
         <div style={{ flex: 1, height: '100%', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+          {/* Panel de Filtros de Capas */}
+          <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1000, backgroundColor: 'white', borderRadius: '8px', padding: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fas fa-layer-group"></i>
+              Capas
+            </div>
+            {incidentTypes.map((type) => {
+              const count = incidents.filter(i => i.type === type).length;
+              const isVisible = visibleLayers.has(type);
+              const config = getIncidentConfig(type);
+              return (
+                <div key={type} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={isVisible}
+                    onChange={() => toggleLayer(type)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <i className={config.icon} style={{ color: config.color, fontSize: '14px' }}></i>
+                  <span style={{ fontSize: '12px', flex: 1 }}>
+                    {getTypeInSpanish(type)} ({count})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
           <MapContainer
             center={LIMA_CENTER}
             zoom={12}
