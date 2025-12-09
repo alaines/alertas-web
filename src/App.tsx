@@ -146,19 +146,10 @@ export default function App() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
       {/* Barra Superior */}
       <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px' }}>
-        {/* Logo y botón toggle a la izquierda */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
-            ALERTAS VIALES
-          </div>
-          <button 
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="btn btn-light p-2"
-            title={showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
-          >
-            <i className={`fas ${showSidebar ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
-          </button>
+        {/* Logo a la izquierda */}
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+          ALERTAS VIALES
         </div>
 
         {/* Notificaciones y Usuario a la derecha */}
@@ -250,7 +241,16 @@ export default function App() {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Panel lateral */}
         {showSidebar && (
-        <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box' }} className="bg-light">
+        <aside style={{ width: '340px', borderRight: '1px solid #ddd', padding: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0, boxSizing: 'border-box', position: 'relative' }} className="bg-light">
+          {/* Botón para ocultar panel */}
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="btn btn-light p-2"
+            style={{ position: 'absolute', top: '12px', right: '-40px', border: '1px solid #ddd', borderRadius: '0 4px 4px 0' }}
+            title={showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
+          >
+            <i className="fas fa-bars" style={{ fontSize: '16px' }}></i>
+          </button>
           <h2 className="mb-3 h5">Incidentes Activos</h2>
 
           <div className="d-flex gap-2 mb-3">
@@ -313,6 +313,18 @@ export default function App() {
             )}
           </div>
         </aside>
+        )}
+
+        {/* Botón para mostrar panel cuando está oculto */}
+        {!showSidebar && (
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="btn btn-light p-2"
+            style={{ borderRight: '1px solid #ddd', borderRadius: 0, minWidth: '40px' }}
+            title="Mostrar panel"
+          >
+            <i className="fas fa-bars" style={{ fontSize: '16px' }}></i>
+          </button>
         )}
 
         {/* Mapa */}
