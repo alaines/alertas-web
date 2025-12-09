@@ -30,6 +30,10 @@ export default function App() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Obtener tipos únicos de incidentes
+  const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
 
   const load = async () => {
     setLoading(true);
@@ -50,6 +54,11 @@ export default function App() {
     load();
   }, []);
 
+  // Filtrar incidentes por tipo seleccionado
+  const filteredIncidents = selectedType 
+    ? incidents.filter(i => i.type === selectedType)
+    : incidents;
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
       {/* Panel lateral */}
@@ -62,7 +71,7 @@ export default function App() {
             {loading ? 'Cargando...' : 'Refrescar'}
           </button>
           <span style={{ fontSize: '12px', alignSelf: 'center' }}>
-            Activos: {incidents.length}
+            Activos: {filteredIncidents.length}
           </span>
         </div>
 
@@ -72,24 +81,46 @@ export default function App() {
           </div>
         )}
 
-        <div style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>
-          <strong>Legendita mental v0:</strong>
-          <br />
-          Por ahora todos los marcadores son iguales; después pintamos por tipo/prioridad.
+        {/* Filtro por tipo */}
+        <div style={{ marginBottom: '12px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+            Filtrar por tipo:
+          </label>
+          <select 
+            value={selectedType ?? ''} 
+            onChange={(e) => setSelectedType(e.target.value || null)}
+            style={{ width: '100%', padding: '6px', fontSize: '12px', borderRadius: '4px', border: '1px solid #ddd' }}
+          >
+            <option value="">Todos ({incidents.length})</option>
+            {incidentTypes.map((type) => {
+              const count = incidents.filter(i => i.type === type).length;
+              return (
+                <option key={type} value={type}>
+                  {type} ({count})
+                </option>
+              );
+            })}
+          </select>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', borderTop: '1px solid #eee', paddingTop: '8px' }}>
-          {incidents.map((i) => (
-            <div key={i.id} style={{ borderBottom: '1px solid #eee', paddingBottom: '6px', marginBottom: '6px', fontSize: '12px' }}>
-              <strong>{i.type}</strong> ({formatCategory(i.category)})
-              <br />
-              {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
-              <br />
-              <span style={{ color: '#777' }}>
-                Prioridad: {i.priority ?? '-'} | Confiab.: {i.reliability ?? '-'}
-              </span>
+          {filteredIncidents.length > 0 ? (
+            filteredIncidents.map((i) => (
+              <div key={i.id} style={{ borderBottom: '1px solid #eee', paddingBottom: '6px', marginBottom: '6px', fontSize: '12px' }}>
+                <strong>{i.type}</strong> ({formatCategory(i.category)})
+                <br />
+                {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                <br />
+                <span style={{ color: '#777' }}>
+                  Prioridad: {i.priority ?? '-'} | Confiab.: {i.reliability ?? '-'}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div style={{ color: '#999', fontSize: '12px', textAlign: 'center', paddingTop: '20px' }}>
+              No hay incidentes de este tipo
             </div>
-          ))}
+          )}
         </div>
       </aside>
 
@@ -105,7 +136,7 @@ export default function App() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {incidents.map((i) => (
+          {filteredIncidents.map((i) => (
             <Marker key={i.id} position={[i.lat, i.lon]} icon={defaultIcon}>
               <Popup>
                 <div style={{ fontSize: '12px' }}>
