@@ -88,7 +88,8 @@ export default function App() {
   const [closedIncidents, setClosedIncidents] = useState<Incident[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userName] = useState('Juan Pérez');
+  const [userName] = useState('Aland Laines');
+  const [userImage] = useState<string | null>(null);
 
   // Obtener tipos únicos de incidentes
   const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
@@ -127,8 +128,9 @@ export default function App() {
       {/* Barra Superior */}
       <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px' }}>
         {/* Logo a la izquierda */}
-        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3' }}>
-          🚨 ALERTAS VIALES
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+          ALERTAS VIALES
         </div>
 
         {/* Notificaciones y Usuario a la derecha */}
@@ -181,11 +183,17 @@ export default function App() {
               className="btn btn-light p-2 d-flex align-items-center gap-2"
               style={{ fontSize: '14px' }}
             >
-              <img 
-                src="https://via.placeholder.com/32" 
-                alt="User" 
-                style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-              />
+              {userImage ? (
+                <img 
+                  src={userImage} 
+                  alt="User" 
+                  style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                />
+              ) : (
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
+                </div>
+              )}
               <span>{userName}</span>
             </button>
 
