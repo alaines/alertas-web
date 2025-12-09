@@ -8,19 +8,19 @@ import type { Incident } from './api/incidents';
 // Centro de Lima aproximado
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
 
-// Colores y emojis para cada tipo de incidente
-const incidentConfig: Record<string, { color: string; emoji: string }> = {
-  'ACCIDENT': { color: '#dc3545', emoji: '🚗' },
-  'CONGESTION': { color: '#ff9800', emoji: '🚦' },
-  'HAZARD': { color: '#e91e63', emoji: '⚠️' },
-  'POLICE': { color: '#0056b3', emoji: '🚓' },
-  'ROAD_CLOSED': { color: '#6f42c1', emoji: '🚧' },
-  'ROAD_HAZARD': { color: '#fd7e14', emoji: '⛔' },
-  'DISABLED_VEHICLE': { color: '#17a2b8', emoji: '🚙' },
-  'JAM': { color: '#ffc107', emoji: '🚥' },
-  'WEATHERHAZARD': { color: '#6c757d', emoji: '🌧️' },
-  'CONSTRUCTION': { color: '#795548', emoji: '🏗️' },
-  'OBJECT_IN_ROADWAY': { color: '#b71c1c', emoji: '📦' },
+// Colores y iconos para cada tipo de incidente
+const incidentConfig: Record<string, { color: string; icon: string }> = {
+  'ACCIDENT': { color: '#dc3545', icon: 'fas fa-car-crash' },
+  'CONGESTION': { color: '#ff9800', icon: 'fas fa-traffic-light' },
+  'HAZARD': { color: '#e91e63', icon: 'fas fa-exclamation-triangle' },
+  'POLICE': { color: '#0056b3', icon: 'fas fa-police' },
+  'ROAD_CLOSED': { color: '#6f42c1', icon: 'fas fa-road' },
+  'ROAD_HAZARD': { color: '#fd7e14', icon: 'fas fa-ban' },
+  'DISABLED_VEHICLE': { color: '#17a2b8', icon: 'fas fa-car' },
+  'JAM': { color: '#ffc107', icon: 'fas fa-traffic-light' },
+  'WEATHERHAZARD': { color: '#6c757d', icon: 'fas fa-cloud-rain' },
+  'CONSTRUCTION': { color: '#795548', icon: 'fas fa-hard-hat' },
+  'OBJECT_IN_ROADWAY': { color: '#b71c1c', icon: 'fas fa-box' },
 };
 
 function getIncidentConfig(type: string) {
@@ -42,9 +42,8 @@ function createCustomIcon(type: string) {
       justify-content: center;
       border: 3px solid white;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      font-size: 20px;
     ">
-      ${config.emoji}
+      <i class="${config.icon}" style="color: white; font-size: 20px;"></i>
     </div>
   `;
 
@@ -141,7 +140,7 @@ export default function App() {
               className="btn btn-light p-2"
               style={{ position: 'relative' }}
             >
-              🔔
+              <i className="fas fa-bell" style={{ fontSize: '18px' }}></i>
               {closedIncidents.length > 0 && (
                 <span className="badge bg-danger" style={{ position: 'absolute', top: '0', right: '0', fontSize: '10px' }}>
                   {closedIncidents.length}
@@ -194,16 +193,16 @@ export default function App() {
             {showUserMenu && (
               <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 1000, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  👤 Mi Perfil
+                  <i className="fas fa-user me-2"></i>Mi Perfil
                 </a>
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  ⚙️ Configuración
+                  <i className="fas fa-cog me-2"></i>Configuración
                 </a>
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  🔒 Cambiar Contraseña
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
                 </a>
                 <a href="#" className="d-block p-3 text-decoration-none text-dark hover-light" style={{ fontSize: '14px', color: '#dc3545' }}>
-                  🚪 Cerrar Sesión
+                  <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                 </a>
               </div>
             )}
