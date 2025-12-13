@@ -22,7 +22,7 @@ export default function Login() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1551808525-51a94da548ce?q=80&w=2070)',
+        backgroundImage: 'url(/control-center.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
