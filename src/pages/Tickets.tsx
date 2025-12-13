@@ -90,7 +90,19 @@ export default function Tickets() {
       });
       loadTickets();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error al crear ticket');
+      const errorMessage = err.response?.data?.message || err.message || 'Error al crear ticket';
+      console.error('Error creating ticket:', err.response?.data);
+      
+      // Mensajes más específicos según el error
+      if (err.response?.status === 404) {
+        alert(`Incidente no encontrado: El incidente con ID ${createForm.incidentId} no existe en el sistema.`);
+      } else if (err.response?.status === 400) {
+        alert(`Datos inválidos: ${errorMessage}`);
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        alert('No tienes permisos para crear tickets. Por favor, inicia sesión nuevamente.');
+      } else {
+        alert(`Error al crear ticket: ${errorMessage}`);
+      }
     }
   };
 
@@ -430,6 +442,11 @@ export default function Tickets() {
                 <button type="button" className="btn-close" onClick={() => setShowCreateModal(false)}></button>
               </div>
               <div className="modal-body">
+                <div className="alert alert-info mb-3">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Nota:</strong> Para crear un ticket, el incidente debe existir en el sistema. 
+                  Puedes obtener el ID desde el mapa haciendo clic en un incidente y usando el botón "Crear Ticket".
+                </div>
                 <div className="mb-3">
                   <label className="form-label">ID del Incidente *</label>
                   <input
@@ -439,7 +456,7 @@ export default function Tickets() {
                     onChange={(e) => setCreateForm({ ...createForm, incidentId: parseInt(e.target.value) || 0 })}
                     placeholder="Ej: 123"
                   />
-                  <small className="text-muted">El incidente debe existir en el sistema</small>
+                  <small className="text-muted">Ingresa el ID de un incidente existente en el mapa</small>
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Título *</label>

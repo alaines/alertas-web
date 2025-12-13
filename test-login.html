@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Test API Login</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <pre id="result"></pre>
+    
+    <script>
+    async function testLogin() {
+        const result = document.getElementById('result');
+        try {
+            const response = await fetch('http://192.168.18.230/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: 'admin@alertas.com',
+                    password: 'admin123'
+                })
+            });
+            const data = await response.json();
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                result.textContent += '\n\n✅ Token guardado en localStorage';
+            }
+        } catch (error) {
+            result.textContent = '❌ Error: ' + error.message;
+        }
+    }
+    </script>
+</body>
+</html>
