@@ -234,10 +234,22 @@ export default function App() {
                   <div>
                     {closedIncidents.map((i) => (
                       <div key={i.id} className="p-2 border-bottom small" style={{ fontSize: '12px' }}>
-                        <div className="fw-bold text-danger">✓ {getTypeInSpanish(i.type)}</div>
+                        <div className="fw-bold text-danger">
+                          <i className="fas fa-check-circle me-1"></i>
+                          {getTypeInSpanish(i.type)}
+                        </div>
                         <div className="text-muted" style={{ fontSize: '11px' }}>
                           {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
                         </div>
+                        {i.closedAt && (
+                          <div className="text-secondary" style={{ fontSize: '10px', marginTop: '4px' }}>
+                            <i className="fas fa-clock me-1"></i>
+                            Cerrado hace {getMinutesAgo(i.closedAt)} min
+                            <br />
+                            <i className="fas fa-user me-1"></i>
+                            Por: {i.closedBy ?? 'Waze'}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
