@@ -25,6 +25,17 @@ Sistema completo de monitoreo de alertas viales en tiempo real con autenticació
 - **Logs de actividad** - Historial de acciones del sistema
 - **Interfaz profesional** - Bootstrap 5 con diseño responsive
 
+### Sistema de Tickets (Operator y Admin)
+- **Gestión de tickets** - Crear, actualizar y cerrar tickets vinculados a incidentes
+- **Seguimiento de acciones** - Historial inmutable de eventos (auditoría completa)
+- **Estados del ciclo de vida** - OPEN, IN_PROGRESS, DONE
+- **Asignación de responsables** - Asignar tickets a usuarios específicos
+- **Comentarios y notas** - Sistema de comentarios en tickets
+- **Priorización** - Niveles de prioridad (1-5) para organización
+- **Creación desde mapa** - Botón directo en cada incidente para crear ticket
+- **Estadísticas visuales** - Dashboard con contadores por estado
+- **Control de permisos** - Solo OPERATOR y ADMIN pueden crear/modificar tickets
+
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript
@@ -77,11 +88,28 @@ Rol: ADMIN
 4. Asignar roles según necesidades
 
 ### Roles y Permisos
-| Rol          |   Mapa   |  Incidentes |    Panel Admin   | Gestión Usuarios |
-|--------------|----------|-------------|------------------|------------------|
-| **VIEWER**   |    SI    |    SI Ver   |        NO        |       NO         |S
-| **OPERATOR** |    SI    |    SI Ver   |        NO        |       NO         |
-| **ADMIN**    |    SI    |    SI Ver   |        SI        |       SI         |
+| Rol          |   Mapa   |  Incidentes |    Tickets    |    Panel Admin   | Gestión Usuarios |
+|--------------|----------|-------------|---------------|------------------|------------------|
+| **VIEWER**   |    SI    |    SI Ver   |       NO      |        NO        |       NO         |
+| **OPERATOR** |    SI    |    SI Ver   |    SI Crear   |        NO        |       NO         |
+| **ADMIN**    |    SI    |    SI Ver   |    SI Crear   |        SI        |       SI         |
+
+### Uso del Sistema de Tickets
+
+**Crear Ticket desde Mapa:**
+1. Hacer clic en un marcador de incidente
+2. En el popup, clic en "Crear Ticket"
+3. Completar formulario (título, descripción, prioridad, asignado)
+4. El ticket queda vinculado al incidente
+
+**Gestionar Tickets:**
+1. Navegar a sección "Tickets" (disponible para OPERATOR y ADMIN)
+2. Ver lista de todos los tickets con filtros por estado
+3. Hacer clic en un ticket para ver detalles completos
+4. Cambiar estado (OPEN → IN_PROGRESS → DONE)
+5. Agregar comentarios y notas
+6. Ver historial completo de eventos auditables
+
 ### Credenciales de Prueba
 ```
 Email: admin@alertas.com
@@ -139,14 +167,19 @@ alertas-web/
 │   │   ├── axios.config.ts        # Configuración de Axios + interceptores JWT
 │   │   └── incidents.ts           # Servicio para obtener incidentes
 │   ├── services/
-│   │   └── auth.service.ts        # Servicio de autenticación JWT
+│   │   ├── auth.service.ts        # Servicio de autenticación JWT
+│   │   ├── user.service.ts        # Servicio de gestión de usuarios
+│   │   └── ticket.service.ts      # Servicio de gestión de tickets
+│   ├── types/
+│   │   └── ticket.types.ts        # Interfaces y tipos para tickets
 │   ├── context/
 │   │   └── AuthContext.tsx        # Context API para autenticación
 │   ├── components/
 │   │   └── ProtectedRoute.tsx     # HOC para rutas protegidas
 │   ├── pages/
 │   │   ├── Login.tsx              # Página de login
-│   │   └── Admin.tsx              # Panel de administración (usuarios, config, logs)
+│   │   ├── Admin.tsx              # Panel de administración (usuarios, config, logs)
+│   │   └── Tickets.tsx            # Sistema de gestión de tickets
 │   └── assets/
 │       ├── react.svg              # Logo de React
 │       └── bg.jpg                 # Imagen de fondo login
@@ -170,11 +203,32 @@ alertas-web/
 |------|--------|-------------|
 | `/login` | Público | Página de autenticación |
 | `/map` | Autenticado | Mapa de incidentes con filtros |
+| `/tickets` | OPERATOR/ADMIN | Sistema de gestión de tickets |
 | `/admin` | Solo ADMIN | Panel de administración completo |
 
 ### API Endpoints Utilizados
 ```
 Auth:
+POST   /api/v1/auth/login              Login con email/password
+
+Users:
+GET    /api/v1/users                   Listar usuarios (ADMIN)
+POST   /api/v1/users                   Crear usuario (ADMIN)
+PATCH  /api/v1/users/{id}              Actualizar usuario (ADMIN)
+DELETE /api/v1/users/{id}              Eliminar usuario (ADMIN)
+
+Incidents:
+GET    /api/v1/incidents               Listar incidentes activos
+
+Tickets:
+POST   /api/v1/tickets                 Crear ticket (OPERATOR/ADMIN)
+GET    /api/v1/tickets                 Listar tickets con filtros
+GET    /api/v1/tickets/{id}            Obtener ticket con eventos
+PATCH  /api/v1/tickets/{id}            Actualizar ticket (OPERATOR/ADMIN)
+POST   /api/v1/tickets/{id}/status     Cambiar estado (OPERATOR/ADMIN)
+POST   /api/v1/tickets/{id}/comments   Agregar comentario (OPERATOR/ADMIN)
+GET    /api/v1/tickets/{id}/events     Obtener historial de eventos
+```
 POST   /api/v1/auth/login              Login con email/password
 
 Users:
@@ -263,6 +317,7 @@ Response:
 - Sistema de autenticación JWT completo
 - Roles de usuario (Admin, Operator, Viewer)
 - **CRUD de usuarios** con interfaz gráfica
+- **Sistema de tickets completo** con historial auditable
 - Panel de administración funcional
 - Auto-refresh de incidentes (60s)
 - Filtros sincronizados (dropdown + layer panel)
@@ -272,6 +327,11 @@ Response:
 - Interceptores Axios para JWT
 - Manejo de errores y loading states
 - UI responsive con Bootstrap 5
+- Creación de tickets desde mapa
+- Gestión de estados de tickets (OPEN, IN_PROGRESS, DONE)
+- Sistema de comentarios en tickets
+- Asignación de tickets a usuarios
+- Estadísticas de tickets por estado
 
 ### Próximas Mejoras
 - Cambio de contraseña desde perfil

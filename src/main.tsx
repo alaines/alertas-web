@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
+import Tickets from './pages/Tickets';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -22,6 +23,14 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             element={
               <ProtectedRoute>
                 <App />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tickets" 
+            element={
+              <ProtectedRoute requireOperator>
+                <Tickets />
               </ProtectedRoute>
             } 
           />

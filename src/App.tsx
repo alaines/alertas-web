@@ -103,7 +103,7 @@ function getTypeInSpanish(type: string): string {
 
 export default function App() {
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isOperator } = useAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -226,6 +226,16 @@ export default function App() {
               <i className="fas fa-map me-2"></i>
               Mapa
             </button>
+            {isOperator && (
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                style={{ fontSize: '14px' }}
+                onClick={() => navigate('/tickets')}
+              >
+                <i className="fas fa-ticket-alt me-2"></i>
+                Tickets
+              </button>
+            )}
             {isAdmin && (
               <button 
                 className="btn btn-sm btn-outline-primary"
@@ -533,6 +543,22 @@ export default function App() {
                           <span style={{ fontSize: '11px', color: '#6c757d' }}>
                             Cerrado por: {i.closedBy ?? 'Waze'}
                           </span>
+                        </>
+                      )}
+                      {isOperator && !isClosed && (
+                        <>
+                          <br />
+                          <button
+                            className="btn btn-sm btn-primary mt-2 w-100"
+                            onClick={() => {
+                              // Navegar a tickets con el incidentId en el query
+                              navigate(`/tickets?createFor=${i.id}`);
+                            }}
+                            style={{ fontSize: '11px' }}
+                          >
+                            <i className="fas fa-plus me-1"></i>
+                            Crear Ticket
+                          </button>
                         </>
                       )}
                     </div>
