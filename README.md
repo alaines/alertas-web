@@ -1,21 +1,29 @@
 # 🚨 Alertas Viales Web
 
-Aplicación web interactiva para visualizar alertas viales en tiempo real usando un mapa interactivo. Muestra incidentes reportados desde Waze con información de ubicación, tipo, prioridad y confiabilidad.
+Sistema completo de monitoreo de alertas viales en tiempo real con autenticación JWT, gestión de usuarios y panel de administración. Visualiza incidentes de Waze en un mapa interactivo con auto-refresh y notificaciones.
 
 ## 🎯 Características
 
-- **🗺️ Mapa interactivo** - Visualización de incidentes en tiempo real usando Leaflet
+### Monitoreo de Incidentes
+- **🗺️ Mapa interactivo** - Leaflet con marcadores personalizados por tipo
 - **🔄 Auto-refresh** - Actualización automática cada 60 segundos
-- **👥 Sistema de autenticación** - Login con JWT y roles de usuario (Admin, Operator, Viewer)
-- **🎨 Panel lateral** - Listado scrolleable de todos los incidentes activos
-- **📍 Información detallada** - Cada incidente muestra:
-  - Tipo de alerta (accidente, congestión, peligro, etc.)
-  - Categoría y ubicación (ciudad y calle)
-  - Prioridad y confiabilidad
-  - Coordenadas GPS y tiempo transcurrido
-- **🎛️ Panel de administración** - Gestión de usuarios, configuración y logs (solo Admin)
-- **🔔 Notificaciones** - Sistema de alertas de incidentes cerrados
-- **🌐 Diseño responsivo** - Interfaz limpia y funcional
+- **🎯 Filtros inteligentes** - Por tipo de incidente y capas del mapa
+- **📍 Información detallada** - Tipo, ubicación, prioridad, confiabilidad, tiempo transcurrido
+- **🔔 Notificaciones** - Alertas de incidentes recientemente cerrados (últimos 5 min)
+- **⏰ Timestamps dinámicos** - Actualización automática de tiempos relativos
+
+### Autenticación y Seguridad
+- **🔐 JWT Authentication** - Sistema seguro con tokens y refresh automático
+- **👥 Roles de usuario** - Admin, Operator, Viewer con permisos diferenciados
+- **🛡️ Rutas protegidas** - Acceso controlado según rol
+- **🔑 Gestión de sesiones** - Persistencia en localStorage con logout automático
+
+### Panel de Administración (Solo Admin)
+- **👤 CRUD de usuarios** - Crear, editar, eliminar usuarios con modal interactivo
+- **📊 Estadísticas en tiempo real** - Conteo de usuarios por rol
+- **⚙️ Configuración del sistema** - Intervalos, mapa, notificaciones
+- **📝 Logs de actividad** - Historial de acciones del sistema
+- **🎨 Interfaz profesional** - Bootstrap 5 con diseño responsive
 
 ## 🛠️ Tech Stack
 
@@ -53,16 +61,27 @@ npm install
 
 ```bash
 # Iniciar servidor de desarrollo
-npm run dev
+## 🔑 Autenticación
 
-# El servidor estará disponible en:
-# http://192.168.18.230:5173/
+### Credenciales Iniciales
+```
+Email: admin@alertas.com
+Password: admin123
+Rol: ADMIN
 ```
 
-El servidor se ejecuta con `--host 0.0.0.0` para ser accesible desde otras máquinas en la red.
+**Primer inicio**:
+1. Acceder con credenciales de admin
+2. Ir a Panel de Administración
+3. Crear usuarios adicionales (operator, viewer)
+4. Asignar roles según necesidades
 
-## 🔑 Login
-
+### Roles y Permisos
+| Rol | Mapa | Incidentes | Panel Admin | Gestión Usuarios |
+|-----|------|------------|-------------|------------------|
+| **VIEWER** | ✅ | ✅ Ver | ❌ | ❌ |
+| **OPERATOR** | ✅ | ✅ Ver | ❌ | ❌ |
+| **ADMIN** | ✅ | ✅ Ver | ✅ | ✅ |
 ### Credenciales de Prueba
 ```
 Email: admin@alertas.com
@@ -123,59 +142,48 @@ alertas-web/
 │   │   └── auth.service.ts        # Servicio de autenticación JWT
 │   ├── context/
 │   │   └── AuthContext.tsx        # Context API para autenticación
-│   ├── components/
-│   │   └── ProtectedRoute.tsx     # HOC para proteger rutas
-│   └── pages/
-│       ├── Login.tsx              # Página de login
-│       └── Admin.tsx              # Panel de administración
-├── public/
-│   ├── control-center.png         # Background de login
-│   └── favicon.ico                # Favicon
-├── index.html                     # HTML principal
-├── vite.config.ts                 # Configuración de Vite
-├── tsconfig.json                  # Configuración de TypeScript
-├── package.json                   # Dependencias y scripts
-├── .env                           # Variables de entorno
-├── README.md                      # Esta documentación
-├── JWT_AUTH.md                    # Guía de autenticación JWT
-├── AUTHENTICATION.md              # Documentación técnica de auth
-└── QUICK_START.md                 # Guía rápida de inicio
+## 🏗️ Arquitectura
+
+### Autenticación JWT
+- **Login**: POST `/api/v1/auth/login` con email/password
+- **Token**: Se guarda en localStorage y se envía automáticamente en cada petición
+- **Interceptores**: Axios agrega `Authorization: Bearer {token}` a todas las requests
+- **Auto-logout**: Redirección automática a login si token expira (401)
+
+### Rutas de la Aplicación
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/login` | 🌍 Público | Página de autenticación |
+| `/map` | 🔒 Autenticado | Mapa de incidentes con filtros |
+| `/admin` | 🔒 Solo ADMIN | Panel de administración completo |
+
+### API Endpoints Utilizados
 ```
+Auth:
+POST   /api/v1/auth/login              Login con email/password
 
-## 🔐 Sistema de Autenticación
+Users:
+GET    /api/v1/users                   Listar usuarios (ADMIN)
+POST   /api/v1/users                   Crear usuario (ADMIN)
+PATCH  /api/v1/users/{id}              Actualizar usuario (ADMIN)
+## 🎨 Capturas de Pantalla
 
-El sistema utiliza **JWT (JSON Web Tokens)** para autenticación segura.
+### 🔐 Login
+- Formulario con email y password
+- Validación en tiempo real
+- Manejo de errores del servidor
 
-### Rutas
-- `/login` - Página de login (público)
-- `/map` - Mapa de incidentes (requiere autenticación)
-- `/admin` - Panel de administración (solo ADMIN)
+### 🗺️ Mapa Principal
+- Marcadores con colores según tipo de incidente
+- Panel lateral con lista de incidentes
+- Filtros por tipo (dropdown y layer panel sincronizados)
+- Notificaciones de incidentes cerrados
+- Menú de usuario con opciones según rol
 
-### Roles de Usuario
-- **ADMIN**: Acceso completo + panel de administración
-- **OPERATOR**: Acceso al mapa y operaciones
-- **VIEWER**: Solo lectura del mapa
-
-Ver `JWT_AUTH.md` para documentación completa de autenticación.
-
-## 🗺️ Endpoints de API
-
-### Autenticación
-```
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "admin@alertas.com",
-  "password": "admin123"
-}
-
-Response:
-{
-  "access_token": "eyJhbGciOiJIUzI1...",
-  "user": { ... }
-}
-```
+### 👨‍💼 Panel de Administración
+- **Usuarios**: Tabla con CRUD completo, modal de edición, estadísticas por rol
+- **Configuración**: Ajustes de intervalos, mapa y notificaciones
+- **Logs**: Historial de actividad del sistema
 
 ### Incidentes (Requiere Token)
 ```
@@ -228,31 +236,45 @@ Response:
 - Comprueba que el token se envía en el header `Authorization`
 - Abre DevTools → Network → Headers para verificar
 
-## 📝 Desarrollo Futuro
+## ✅ Estado del Proyecto
 
-### Completado ✅
-- [x] Sistema de autenticación con JWT
-- [x] Roles de usuario (Admin, Operator, Viewer)
-- [x] Panel de administración
-- [x] Auto-refresh de incidentes (60s)
-- [x] Filtrado por tipo de incidente
-- [x] Marcadores con colores según tipo
-- [x] Notificaciones de incidentes cerrados
-- [x] Rutas protegidas
+### Implementado
+- ✅ Sistema de autenticación JWT completo
+- ✅ Roles de usuario (Admin, Operator, Viewer)
+- ✅ **CRUD de usuarios** con interfaz gráfica
+- ✅ Panel de administración funcional
+- ✅ Auto-refresh de incidentes (60s)
+- ✅ Filtros sincronizados (dropdown + layer panel)
+- ✅ Marcadores personalizados por tipo
+- ✅ Notificaciones de incidentes cerrados
+- ✅ Rutas protegidas con ProtectedRoute
+- ✅ Interceptores Axios para JWT
+- ✅ Manejo de errores y loading states
+- ✅ UI responsive con Bootstrap 5
 
-### Pendiente 🚧
-- [ ] CRUD completo de usuarios en panel admin
-- [ ] Cambio de contraseña funcional
+### Próximas Mejoras
+- [ ] Cambio de contraseña desde perfil
 - [ ] Recuperación de contraseña por email
 - [ ] Refresh token automático
-- [ ] Logs de actividad persistentes
-- [ ] Exportación de reportes
-- [ ] Historial de incidentes
-- [ ] Estadísticas avanzadas
-- [ ] Tema oscuro/claro
-- [ ] 2FA (autenticación de dos factores)
+- [ ] Logs de actividad persistentes en BD
+- [ ] Exportación de reportes (PDF, Excel)
+- [ ] Historial de incidentes con búsqueda
+- [ ] Dashboard con estadísticas y gráficos
+## 🤝 Contribuir
 
-## 📚 Documentación Adicional
+Este proyecto está en desarrollo activo. Para contribuir:
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📞 Soporte
+
+- **API Documentation**: http://192.168.18.230/api/v1/docs
+- **Issues**: https://github.com/alaines/alertas-web/issues
+- **Backend API**: Alertas API v1.0.0
 
 - **`JWT_AUTH.md`** - Guía completa de autenticación JWT
 - **`AUTHENTICATION.md`** - Documentación técnica del sistema de auth
