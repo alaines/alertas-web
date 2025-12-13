@@ -1,31 +1,31 @@
-# 🚨 Alertas Viales Web
+# Alertas Viales Web
 
 Sistema completo de monitoreo de alertas viales en tiempo real con autenticación JWT, gestión de usuarios y panel de administración. Visualiza incidentes de Waze en un mapa interactivo con auto-refresh y notificaciones.
 
-## 🎯 Características
+## Características
 
 ### Monitoreo de Incidentes
-- **🗺️ Mapa interactivo** - Leaflet con marcadores personalizados por tipo
-- **🔄 Auto-refresh** - Actualización automática cada 60 segundos
-- **🎯 Filtros inteligentes** - Por tipo de incidente y capas del mapa
-- **📍 Información detallada** - Tipo, ubicación, prioridad, confiabilidad, tiempo transcurrido
-- **🔔 Notificaciones** - Alertas de incidentes recientemente cerrados (últimos 5 min)
-- **⏰ Timestamps dinámicos** - Actualización automática de tiempos relativos
+- **Mapa interactivo** - Leaflet con marcadores personalizados por tipo
+- **Auto-refresh** - Actualización automática cada 60 segundos
+- **Filtros inteligentes** - Por tipo de incidente y capas del mapa
+- **Información detallada** - Tipo, ubicación, prioridad, confiabilidad, tiempo transcurrido
+- **Notificaciones** - Alertas de incidentes recientemente cerrados (últimos 5 min)
+- **Timestamps dinámicos** - Actualización automática de tiempos relativos
 
 ### Autenticación y Seguridad
-- **🔐 JWT Authentication** - Sistema seguro con tokens y refresh automático
-- **👥 Roles de usuario** - Admin, Operator, Viewer con permisos diferenciados
-- **🛡️ Rutas protegidas** - Acceso controlado según rol
-- **🔑 Gestión de sesiones** - Persistencia en localStorage con logout automático
+- **JWT Authentication** - Sistema seguro con tokens y refresh automático
+- **Roles de usuario** - Admin, Operator, Viewer con permisos diferenciados
+- **Rutas protegidas** - Acceso controlado según rol
+- **Gestión de sesiones** - Persistencia en localStorage con logout automático
 
 ### Panel de Administración (Solo Admin)
-- **👤 CRUD de usuarios** - Crear, editar, eliminar usuarios con modal interactivo
-- **📊 Estadísticas en tiempo real** - Conteo de usuarios por rol
-- **⚙️ Configuración del sistema** - Intervalos, mapa, notificaciones
-- **📝 Logs de actividad** - Historial de acciones del sistema
-- **🎨 Interfaz profesional** - Bootstrap 5 con diseño responsive
+- **CRUD de usuarios** - Crear, editar, eliminar usuarios con modal interactivo
+- **Estadísticas en tiempo real** - Conteo de usuarios por rol
+- **Configuración del sistema** - Intervalos, mapa, notificaciones
+- **Logs de actividad** - Historial de acciones del sistema
+- **Interfaz profesional** - Bootstrap 5 con diseño responsive
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend**: React 19 + TypeScript
 - **Build**: Vite 7
@@ -36,13 +36,13 @@ Sistema completo de monitoreo de alertas viales en tiempo real con autenticació
 - **Auth**: JWT (JSON Web Tokens)
 - **Linting**: ESLint
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
 - Node.js 18+
 - npm o yarn
 - Backend API en `192.168.18.230/api/v1` (con autenticación JWT)
 
-## 🚀 Instalación
+## Instalación
 
 ```bash
 # Clonar el repositorio
@@ -100,7 +100,7 @@ VITE_API_URL="http://192.168.18.230/api/v1"
 # JWT Authentication - No API Key needed
 ```
 
-⚠️ **Nota**: Ya no se usa `VITE_API_KEY`. El sistema ahora utiliza JWT (tokens) obtenidos al hacer login.
+**Nota**: Ya no se usa `VITE_API_KEY`. El sistema ahora utiliza JWT (tokens) obtenidos al hacer login.
 
 ### Axios con JWT
 
@@ -109,7 +109,7 @@ El sistema usa interceptores de Axios para:
 - Manejar errores 401 (redirigir a login si el token expira)
 - Logout automático en caso de autenticación fallida
 
-## 📦 Build para Producción
+## Build para Producción
 
 ```bash
 # Compilar TypeScript y bundlear con Vite
@@ -119,14 +119,14 @@ npm run build
 npm run preview
 ```
 
-## 🧹 Linting
+## Linting
 
 ```bash
 # Verificar código con ESLint
 npm run lint
 ```
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 alertas-web/
@@ -142,7 +142,22 @@ alertas-web/
 │   │   └── auth.service.ts        # Servicio de autenticación JWT
 │   ├── context/
 │   │   └── AuthContext.tsx        # Context API para autenticación
-## 🏗️ Arquitectura
+│   ├── components/
+│   │   └── ProtectedRoute.tsx     # HOC para rutas protegidas
+│   ├── pages/
+│   │   ├── Login.tsx              # Página de login
+│   │   └── Admin.tsx              # Panel de administración (usuarios, config, logs)
+│   └── assets/
+│       ├── react.svg              # Logo de React
+│       └── bg.jpg                 # Imagen de fondo login
+├── public/                        # Archivos estáticos
+├── index.html                     # HTML principal
+├── vite.config.ts                 # Configuración de Vite
+├── tsconfig.json                  # Configuración de TypeScript
+└── QUICK_START.md                 # Guía rápida de inicio
+```
+
+## Arquitectura
 
 ### Autenticación JWT
 - **Login**: POST `/api/v1/auth/login` con email/password
@@ -153,9 +168,9 @@ alertas-web/
 ### Rutas de la Aplicación
 | Ruta | Acceso | Descripción |
 |------|--------|-------------|
-| `/login` | 🌍 Público | Página de autenticación |
-| `/map` | 🔒 Autenticado | Mapa de incidentes con filtros |
-| `/admin` | 🔒 Solo ADMIN | Panel de administración completo |
+| `/login` | Público | Página de autenticación |
+| `/map` | Autenticado | Mapa de incidentes con filtros |
+| `/admin` | Solo ADMIN | Panel de administración completo |
 
 ### API Endpoints Utilizados
 ```
@@ -166,21 +181,27 @@ Users:
 GET    /api/v1/users                   Listar usuarios (ADMIN)
 POST   /api/v1/users                   Crear usuario (ADMIN)
 PATCH  /api/v1/users/{id}              Actualizar usuario (ADMIN)
-## 🎨 Capturas de Pantalla
+DELETE /api/v1/users/{id}              Eliminar usuario (ADMIN)
 
-### 🔐 Login
+Incidents:
+GET    /api/v1/incidents               Listar incidentes activos
+```
+
+## Capturas de Pantalla
+
+### Login
 - Formulario con email y password
 - Validación en tiempo real
 - Manejo de errores del servidor
 
-### 🗺️ Mapa Principal
+### Mapa Principal
 - Marcadores con colores según tipo de incidente
 - Panel lateral con lista de incidentes
 - Filtros por tipo (dropdown y layer panel sincronizados)
 - Notificaciones de incidentes cerrados
 - Menú de usuario con opciones según rol
 
-### 👨‍💼 Panel de Administración
+### Panel de Administración
 - **Usuarios**: Tabla con CRUD completo, modal de edición, estadísticas por rol
 - **Configuración**: Ajustes de intervalos, mapa y notificaciones
 - **Logs**: Historial de actividad del sistema
@@ -211,7 +232,7 @@ Response:
 ]
 ```
 
-## 🐛 Solución de Problemas
+## Solución de Problemas
 
 ### No puedo hacer login
 - Verifica que el backend esté corriendo en `http://192.168.18.230/api/v1`
@@ -236,31 +257,36 @@ Response:
 - Comprueba que el token se envía en el header `Authorization`
 - Abre DevTools → Network → Headers para verificar
 
-## ✅ Estado del Proyecto
+## Estado del Proyecto
 
 ### Implementado
-- ✅ Sistema de autenticación JWT completo
-- ✅ Roles de usuario (Admin, Operator, Viewer)
-- ✅ **CRUD de usuarios** con interfaz gráfica
-- ✅ Panel de administración funcional
-- ✅ Auto-refresh de incidentes (60s)
-- ✅ Filtros sincronizados (dropdown + layer panel)
-- ✅ Marcadores personalizados por tipo
-- ✅ Notificaciones de incidentes cerrados
-- ✅ Rutas protegidas con ProtectedRoute
-- ✅ Interceptores Axios para JWT
-- ✅ Manejo de errores y loading states
-- ✅ UI responsive con Bootstrap 5
+- Sistema de autenticación JWT completo
+- Roles de usuario (Admin, Operator, Viewer)
+- **CRUD de usuarios** con interfaz gráfica
+- Panel de administración funcional
+- Auto-refresh de incidentes (60s)
+- Filtros sincronizados (dropdown + layer panel)
+- Marcadores personalizados por tipo
+- Notificaciones de incidentes cerrados
+- Rutas protegidas con ProtectedRoute
+- Interceptores Axios para JWT
+- Manejo de errores y loading states
+- UI responsive con Bootstrap 5
 
 ### Próximas Mejoras
-- [ ] Cambio de contraseña desde perfil
-- [ ] Recuperación de contraseña por email
-- [ ] Refresh token automático
-- [ ] Logs de actividad persistentes en BD
-- [ ] Exportación de reportes (PDF, Excel)
-- [ ] Historial de incidentes con búsqueda
-- [ ] Dashboard con estadísticas y gráficos
-## 🤝 Contribuir
+- Cambio de contraseña desde perfil
+- Recuperación de contraseña por email
+- Refresh token automático
+- Logs de actividad persistentes en BD
+- Exportación de reportes (PDF, Excel)
+- Historial de incidentes con búsqueda
+- Dashboard con estadísticas y gráficos
+- Configuración persistente en BD
+- Tema oscuro/claro
+- 2FA (autenticación de dos factores)
+- Notificaciones push en tiempo real
+
+## Contribuir
 
 Este proyecto está en desarrollo activo. Para contribuir:
 
@@ -270,25 +296,21 @@ Este proyecto está en desarrollo activo. Para contribuir:
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📞 Soporte
+## Soporte
 
 - **API Documentation**: http://192.168.18.230/api/v1/docs
 - **Issues**: https://github.com/alaines/alertas-web/issues
 - **Backend API**: Alertas API v1.0.0
 
-- **`JWT_AUTH.md`** - Guía completa de autenticación JWT
-- **`AUTHENTICATION.md`** - Documentación técnica del sistema de auth
-- **`QUICK_START.md`** - Guía rápida para comenzar
-- **`API_SECURITY.md`** - Documentación de seguridad (obsoleta, usaba API Keys)
-
-## 📄 Licencia
+## Licencia
 
 Proyecto de demostración. Usar libremente con fines educativos.
 
-## 👤 Autor
+## Autor
 
-Created with ❤️ by alaines
+Created by alaines
 
 ---
 
-**Última actualización**: 9 de diciembre de 2025
+**Última actualización**: 13 de diciembre de 2025
+
