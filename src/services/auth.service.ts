@@ -19,14 +19,37 @@ export interface AuthResponse {
   };
 }
 
+// Crear instancia dedicada para auth (sin interceptores)
+const authAxios = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials);
-    if (response.data.access_token) {
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      console.log('Attempting login to:', `${API_URL}/auth/login`);
+      console.log('With credentials:', { ...credentials, password: '***' });
+      
+      const response = await authAxios.post('/auth/login', credentials);
+      
+      console.log('Login successful:', response.data);
+      
+      if (response.data.access_token) {
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
     }
-    return response.data;
   }
 
   logout() {

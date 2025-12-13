@@ -1,7 +1,8 @@
 // src/pages/Admin.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import userService, { type User, type CreateUserDto, type UpdateUserDto } from '../services/user.service';
 
 export default function Admin() {
   const { user, logout } = useAuth();
@@ -82,35 +83,139 @@ export default function Admin() {
 }
 
 function UsersTab() {
-  const [users] = useState([
-    { id: 1, username: 'admin', name: 'Administrador', email: 'admin@alertas.com', role: 'admin', status: 'active' },
-    { id: 2, username: 'operator1', name: 'Operador 1', email: 'op1@alertas.com', role: 'operator', status: 'active' },
-    { id: 3, username: 'viewer1', name: 'Visualizador 1', email: 'view1@alertas.com', role: 'viewer', status: 'active' },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<CreateUserDto>({
+    email: '',
+    username: '',
+    fullName: '',
+    password: '',
+    role: 'VIEWER',
+  });
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await userService.getAllUsers();
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al cargar usuarios');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setFormData({
+      email: '',
+      username: '',
+      fullName: '',
+      password: '',
+      role: 'VIEWER',
+    });
+    setShowModal(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+      password: '', // No mostrar password actual
+      role: user.role,
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
+      if (editingUser) {
+        // Actualizar usuario existente
+        const updateData: UpdateUserDto = {
+          email: formData.email,
+          username: formData.username,
+          fullName: formData.fullName,
+          role: formData.role,
+        };
+        await userService.updateUser(editingUser.id, updateData);
+      } else {
+        // Crear nuevo usuario
+        await userService.createUser(formData);
+      }
+      setShowModal(false);
+      loadUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al guardar usuario');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+
+    try {
+      await userService.deleteUser(userId);
+      loadUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error al eliminar usuario');
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     const badges = {
-      admin: 'bg-danger',
-      operator: 'bg-warning',
-      viewer: 'bg-info'
+      ADMIN: 'bg-danger',
+      OPERATOR: 'bg-warning',
+      VIEWER: 'bg-info'
     };
     return badges[role as keyof typeof badges] || 'bg-secondary';
   };
 
   const getRoleText = (role: string) => {
     const roles = {
-      admin: 'Administrador',
-      operator: 'Operador',
-      viewer: 'Visualizador'
+      ADMIN: 'Administrador',
+      OPERATOR: 'Operador',
+      VIEWER: 'Visualizador'
     };
     return roles[role as keyof typeof roles] || role;
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger">
+        <i className="fas fa-exclamation-triangle me-2"></i>
+        {error}
+        <button className="btn btn-sm btn-outline-danger ms-3" onClick={loadUsers}>
+          <i className="fas fa-refresh me-1"></i>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="h4 mb-0">Gestión de Usuarios</h2>
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" onClick={handleCreateUser}>
           <i className="fas fa-plus me-2"></i>
           Nuevo Usuario
         </button>
@@ -126,7 +231,6 @@ function UsersTab() {
                   <th>Nombre</th>
                   <th>Email</th>
                   <th>Rol</th>
-                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -137,7 +241,7 @@ function UsersTab() {
                       <i className="fas fa-user-circle me-2 text-muted"></i>
                       {user.username}
                     </td>
-                    <td>{user.name}</td>
+                    <td>{user.fullName}</td>
                     <td>{user.email}</td>
                     <td>
                       <span className={`badge ${getRoleBadge(user.role)}`}>
@@ -145,13 +249,16 @@ function UsersTab() {
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-success">Activo</span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-primary me-2">
+                      <button 
+                        className="btn btn-sm btn-outline-primary me-2"
+                        onClick={() => handleEditUser(user)}
+                      >
                         <i className="fas fa-edit"></i>
                       </button>
-                      <button className="btn btn-sm btn-outline-danger">
+                      <button 
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
                         <i className="fas fa-trash"></i>
                       </button>
                     </td>
@@ -167,7 +274,7 @@ function UsersTab() {
         <div className="col-md-4">
           <div className="card text-center">
             <div className="card-body">
-              <h3 className="display-4 text-danger">{users.filter(u => u.role === 'admin').length}</h3>
+              <h3 className="display-4 text-danger">{users.filter(u => u.role === 'ADMIN').length}</h3>
               <p className="text-muted mb-0">Administradores</p>
             </div>
           </div>
@@ -175,7 +282,7 @@ function UsersTab() {
         <div className="col-md-4">
           <div className="card text-center">
             <div className="card-body">
-              <h3 className="display-4 text-warning">{users.filter(u => u.role === 'operator').length}</h3>
+              <h3 className="display-4 text-warning">{users.filter(u => u.role === 'OPERATOR').length}</h3>
               <p className="text-muted mb-0">Operadores</p>
             </div>
           </div>
@@ -183,12 +290,99 @@ function UsersTab() {
         <div className="col-md-4">
           <div className="card text-center">
             <div className="card-body">
-              <h3 className="display-4 text-info">{users.filter(u => u.role === 'viewer').length}</h3>
+              <h3 className="display-4 text-info">{users.filter(u => u.role === 'VIEWER').length}</h3>
               <p className="text-muted mb-0">Visualizadores</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal para crear/editar usuario */}
+      {showModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+                </h5>
+                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Email *</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Usuario *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Nombre Completo *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    required
+                  />
+                </div>
+                {!editingUser && (
+                  <div className="mb-3">
+                    <label className="form-label">Contraseña *</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+                <div className="mb-3">
+                  <label className="form-label">Rol *</label>
+                  <select
+                    className="form-select"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  >
+                    <option value="VIEWER">Visualizador</option>
+                    <option value="OPERATOR">Operador</option>
+                    <option value="ADMIN">Administrador</option>
+                  </select>
+                </div>
+                {editingUser && (
+                  <div className="alert alert-info">
+                    <i className="fas fa-info-circle me-2"></i>
+                    Para cambiar la contraseña, el usuario debe usar la opción "Cambiar Contraseña" en su perfil.
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveUser}>
+                  <i className="fas fa-save me-2"></i>
+                  {editingUser ? 'Actualizar' : 'Crear'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -250,24 +444,6 @@ function SettingsTab() {
               <button className="btn btn-primary">
                 <i className="fas fa-save me-2"></i>
                 Guardar Cambios
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-6 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <i className="fas fa-key me-2"></i>
-                API Keys
-              </h5>
-            </div>
-            <div className="card-body">
-              <p className="text-muted">Gestiona las claves de API para acceso externo</p>
-              <button className="btn btn-success">
-                <i className="fas fa-plus me-2"></i>
-                Generar Nueva API Key
               </button>
             </div>
           </div>
