@@ -57,7 +57,7 @@ npm install
 # VITE_API_URL="http://192.168.18.230/api/v1"
 ```
 
-## 🏃 Desarrollo
+##  Desarrollo
 
 ```bash
 # Iniciar servidor de desarrollo
@@ -77,11 +77,11 @@ Rol: ADMIN
 4. Asignar roles según necesidades
 
 ### Roles y Permisos
-| Rol | Mapa | Incidentes | Panel Admin | Gestión Usuarios |
-|-----|------|------------|-------------|------------------|
-| **VIEWER** | ✅ | ✅ Ver | ❌ | ❌ |
-| **OPERATOR** | ✅ | ✅ Ver | ❌ | ❌ |
-| **ADMIN** | ✅ | ✅ Ver | ✅ | ✅ |
+| Rol          |   Mapa   |  Incidentes |    Panel Admin   | Gestión Usuarios |
+|--------------|----------|-------------|------------------|------------------|
+| **VIEWER**   |    SI    |    SI Ver   |        NO        |       NO         |S
+| **OPERATOR** |    SI    |    SI Ver   |        NO        |       NO         |
+| **ADMIN**    |    SI    |    SI Ver   |        SI        |       SI         |
 ### Credenciales de Prueba
 ```
 Email: admin@alertas.com
