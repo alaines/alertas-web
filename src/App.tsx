@@ -67,6 +67,19 @@ function formatCategory(cat: string | null): string {
   return cat;
 }
 
+// Función para formatear la hora del incidente
+function formatTime(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Función para calcular minutos transcurridos
+function getMinutesAgo(isoString: string): number {
+  const pubTime = new Date(isoString).getTime();
+  const now = new Date().getTime();
+  return Math.floor((now - pubTime) / (1000 * 60));
+}
+
 // Mapeo de tipos a español
 const typeTranslations: Record<string, string> = {
   'ACCIDENT': 'Accidente',
@@ -97,6 +110,7 @@ export default function App() {
   const [userName] = useState('Aland Laines');
   const [userImage] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [, setCurrentTime] = useState(Date.now()); // Para forzar re-render de tiempos
 
   // Obtener tipos únicos de incidentes
   const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
@@ -139,6 +153,15 @@ export default function App() {
     
     return () => clearInterval(interval);
   }, [incidents]);
+
+  // Actualizar tiempo cada minuto para refrescar "hace X minutos"
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // cada 60 segundos
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Inicializar capas visibles cuando se cargan los incidentes
   useEffect(() => {
@@ -347,6 +370,9 @@ export default function App() {
                     <div style={{ fontSize: '11px', marginTop: '2px' }}>
                       {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
                     </div>
+                    <div style={{ fontSize: '11px', marginTop: '2px', color: '#0056b3', fontWeight: '600' }}>
+                      🕐 {formatTime(i.pub_time)} · Hace {getMinutesAgo(i.pub_time)} min
+                    </div>
                     <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
                       ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
                     </div>
@@ -416,6 +442,10 @@ export default function App() {
                       <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
                       <br />
                       {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
+                      <br />
+                      <span style={{ color: '#0056b3', fontWeight: 'bold' }}>
+                        🕐 {formatTime(i.pub_time)} ({getMinutesAgo(i.pub_time)} min)
+                      </span>
                       <br />
                       Prioridad: {i.priority ?? '-'}
                       <br />
