@@ -6,7 +6,7 @@ import ticketService from '../services/ticket.service';
 import type { Ticket, TicketStatus, CreateTicketDto, ChangeTicketStatusDto } from '../types/ticket.types';
 
 export default function Tickets() {
-  const { user, logout, isOperator } = useAuth();
+  const { user, logout, isOperator, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -17,6 +17,7 @@ export default function Tickets() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<TicketStatus | 'ALL'>('ALL');
   const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, done: 0 });
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Form states
   const [createForm, setCreateForm] = useState<CreateTicketDto>({
@@ -166,30 +167,97 @@ export default function Tickets() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {/* Header */}
-      <header className="bg-primary text-white py-3 px-4 shadow-sm" style={{ flexShrink: 0 }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-3">
-            <button 
-              onClick={() => navigate('/map')}
-              className="btn btn-light btn-sm"
-            >
-              <i className="fas fa-arrow-left me-2"></i>
-              Volver al Mapa
-            </button>
-            <h1 className="h4 mb-0">
-              <i className="fas fa-ticket-alt me-2"></i>
-              Gestión de Tickets
-            </h1>
+      <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px', flexShrink: 0 }}>
+        {/* Logo y Menú de Sistema a la izquierda */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+            ALERTAS VIALES
           </div>
-          <div className="d-flex align-items-center gap-3">
-            <span className="small">
-              <i className="fas fa-user me-2"></i>
-              {user?.name}
-            </span>
-            <button onClick={logout} className="btn btn-light btn-sm">
-              <i className="fas fa-sign-out-alt me-2"></i>
-              Cerrar Sesión
+
+          {/* Menú de Sistema */}
+          <nav className="d-flex gap-2">
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/map')}
+            >
+              <i className="fas fa-map me-2"></i>
+              Mapa
             </button>
+            <button 
+              className="btn btn-sm btn-primary"
+              style={{ fontSize: '14px' }}
+            >
+              <i className="fas fa-ticket-alt me-2"></i>
+              Tickets
+            </button>
+            {isAdmin && (
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                style={{ fontSize: '14px' }}
+                onClick={() => navigate('/admin')}
+              >
+                <i className="fas fa-cog me-2"></i>
+                Administración
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* Usuario a la derecha */}
+        <div className="d-flex gap-3 align-items-center" style={{ position: 'relative' }}>
+          {/* Usuario */}
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="btn btn-light p-2 d-flex align-items-center gap-2"
+              style={{ fontSize: '14px' }}
+            >
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
+              </div>
+              <span>{user?.name || 'Usuario'}</span>
+            </button>
+
+            {/* Dropdown de Usuario */}
+            {showUserMenu && (
+              <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 3001, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-user me-2"></i>Mi Perfil
+                </a>
+                {isAdmin && (
+                  <a 
+                    href="#" 
+                    className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" 
+                    style={{ fontSize: '14px' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/admin');
+                    }}
+                  >
+                    <i className="fas fa-cog me-2"></i>Panel Admin
+                  </a>
+                )}
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-cog me-2"></i>Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
+                </a>
+                <a 
+                  href="#" 
+                  className="d-block p-3 text-decoration-none text-dark hover-light" 
+                  style={{ fontSize: '14px', color: '#dc3545' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                  }}
+                >
+                  <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </header>
