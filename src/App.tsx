@@ -27,7 +27,7 @@ const incidentConfig: Record<string, { color: string; icon: string }> = {
 };
 
 function getIncidentConfig(type: string) {
-  return incidentConfig[type] || { color: '#999999', emoji: '📍' };
+  return incidentConfig[type] || { color: '#999999', icon: 'fas fa-map-marker-alt' };
 }
 
 // Función para crear iconos personalizados
@@ -371,10 +371,15 @@ export default function App() {
                       {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
                     </div>
                     <div style={{ fontSize: '11px', marginTop: '2px', color: '#0056b3', fontWeight: '600' }}>
-                      🕐 {formatTime(i.pub_time)} · Hace {getMinutesAgo(i.pub_time)} min
+                      <i className="fas fa-clock me-1"></i>
+                      {formatTime(i.pub_time)} · Hace {getMinutesAgo(i.pub_time)} min
                     </div>
                     <div className="text-secondary" style={{ fontSize: '11px', marginTop: '2px' }}>
-                      ⭐ {i.reliability ?? '-'} | 🎯 {i.priority ?? '-'}
+                      <i className="fas fa-star me-1"></i>
+                      {i.reliability ?? '-'}
+                      <span className="mx-2">|</span>
+                      <i className="fas fa-bullseye me-1"></i>
+                      {i.priority ?? '-'}
                     </div>
                     {isClosed && (
                       <div className="text-muted" style={{ fontSize: '10px', marginTop: '2px' }}>
@@ -444,7 +449,8 @@ export default function App() {
                       {i.city ?? ''} {i.street ? `- ${i.street}` : ''}
                       <br />
                       <span style={{ color: '#0056b3', fontWeight: 'bold' }}>
-                        🕐 {formatTime(i.pub_time)} ({getMinutesAgo(i.pub_time)} min)
+                        <i className="fas fa-clock me-1"></i>
+                        {formatTime(i.pub_time)} ({getMinutesAgo(i.pub_time)} min)
                       </span>
                       <br />
                       Prioridad: {i.priority ?? '-'}
@@ -454,7 +460,8 @@ export default function App() {
                         <>
                           <br />
                           <span style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                            ⚠️ CERRADO
+                            <i className="fas fa-circle-xmark me-1"></i>
+                            CERRADO
                           </span>
                           <br />
                           <span style={{ fontSize: '11px', color: '#6c757d' }}>
