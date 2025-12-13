@@ -12,7 +12,7 @@ export default function Login() {
     e.preventDefault();
     // TODO: Implementar lógica de autenticación con API
     // Por ahora, simplemente redirigir al mapa
-    navigate('/');
+    navigate('/map');
   };
 
   return (
