@@ -1,5 +1,6 @@
 // src/App.tsx
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { fetchIncidents } from './api/incidents';
@@ -100,6 +101,7 @@ function getTypeInSpanish(type: string): string {
 }
 
 export default function App() {
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -302,7 +304,15 @@ export default function App() {
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
                   <i className="fas fa-lock me-2"></i>Cambiar Contraseña
                 </a>
-                <a href="#" className="d-block p-3 text-decoration-none text-dark hover-light" style={{ fontSize: '14px', color: '#dc3545' }}>
+                <a 
+                  href="#" 
+                  className="d-block p-3 text-decoration-none text-dark hover-light" 
+                  style={{ fontSize: '14px', color: '#dc3545' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/login');
+                  }}
+                >
                   <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                 </a>
               </div>
