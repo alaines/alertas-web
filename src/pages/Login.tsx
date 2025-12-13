@@ -1,18 +1,32 @@
 // src/pages/Login.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import authService from '../services/auth.service';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar lógica de autenticación con API
-    // Por ahora, simplemente redirigir al mapa
-    navigate('/map');
+    setError('');
+    setLoading(true);
+
+    try {
+      await authService.login({ email, password });
+      navigate('/map');
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || 
+        'Error al iniciar sesión. Verifica tus credenciales.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,19 +92,27 @@ export default function Login() {
 
           {/* Formulario */}
           <form onSubmit={handleSubmit}>
-            {/* Usuario */}
+            {/* Error Message */}
+            {error && (
+              <div className="alert alert-danger py-2" role="alert">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+            )}
+
+            {/* Email */}
             <div className="mb-3">
-              <label htmlFor="username" className="form-label fw-semibold">
-                <i className="fas fa-user me-2"></i>
-                Usuario
+              <label htmlFor="email" className="form-label fw-semibold">
+                <i className="fas fa-envelope me-2"></i>
+                Email
               </label>
               <input
-                type="text"
+                type="email"
                 className="form-control"
-                id="username"
-                placeholder="Ingresa tu usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                placeholder="admin@alertas.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 style={{ borderRadius: '8px', padding: '12px' }}
               />
@@ -145,9 +167,10 @@ export default function Login() {
               type="submit"
               className="btn btn-primary w-100 py-2 fw-semibold"
               style={{ borderRadius: '8px', fontSize: '16px' }}
+              disabled={loading}
             >
               <i className="fas fa-sign-in-alt me-2"></i>
-              Ingresar
+              {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 

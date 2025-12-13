@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { fetchIncidents } from './api/incidents';
 import type { Incident } from './api/incidents';
+import { useAuth } from './context/AuthContext';
 
 // Centro de Lima aproximado
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
@@ -102,6 +103,7 @@ function getTypeInSpanish(type: string): string {
 
 export default function App() {
   const navigate = useNavigate();
+  const { user, logout, isAdmin } = useAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,8 +111,6 @@ export default function App() {
   const [closedIncidents, setClosedIncidents] = useState<Incident[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userName] = useState('Aland Laines');
-  const [userImage] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [, setCurrentTime] = useState(Date.now()); // Para forzar re-render de tiempos
 
@@ -210,10 +210,33 @@ export default function App() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', margin: 0, padding: 0 }}>
       {/* Barra Superior */}
       <header className="bg-white border-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', boxSizing: 'border-box', height: '60px' }}>
-        {/* Logo a la izquierda */}
-        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
-          ALERTAS VIALES
+        {/* Logo y Menú de Sistema a la izquierda */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0056b3', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <i className="fas fa-map-marker-alt" style={{ fontSize: '24px' }}></i>
+            ALERTAS VIALES
+          </div>
+
+          {/* Menú de Sistema */}
+          <nav className="d-flex gap-2">
+            <button 
+              className="btn btn-sm btn-primary"
+              style={{ fontSize: '14px' }}
+            >
+              <i className="fas fa-map me-2"></i>
+              Mapa
+            </button>
+            {isAdmin && (
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                style={{ fontSize: '14px' }}
+                onClick={() => navigate('/admin')}
+              >
+                <i className="fas fa-cog me-2"></i>
+                Administración
+              </button>
+            )}
+          </nav>
         </div>
 
         {/* Notificaciones y Usuario a la derecha */}
@@ -278,18 +301,10 @@ export default function App() {
               className="btn btn-light p-2 d-flex align-items-center gap-2"
               style={{ fontSize: '14px' }}
             >
-              {userImage ? (
-                <img 
-                  src={userImage} 
-                  alt="User" 
-                  style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-                />
-              ) : (
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
-                </div>
-              )}
-              <span>{userName}</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
+              </div>
+              <span>{user?.name || 'Usuario'}</span>
             </button>
 
             {/* Dropdown de Usuario */}
@@ -298,6 +313,19 @@ export default function App() {
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
                   <i className="fas fa-user me-2"></i>Mi Perfil
                 </a>
+                {isAdmin && (
+                  <a 
+                    href="#" 
+                    className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" 
+                    style={{ fontSize: '14px' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/admin');
+                    }}
+                  >
+                    <i className="fas fa-cog me-2"></i>Panel Admin
+                  </a>
+                )}
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
                   <i className="fas fa-cog me-2"></i>Configuración
                 </a>
@@ -310,7 +338,7 @@ export default function App() {
                   style={{ fontSize: '14px', color: '#dc3545' }}
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate('/login');
+                    logout();
                   }}
                 >
                   <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
