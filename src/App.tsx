@@ -178,6 +178,13 @@ export default function App() {
       newLayers.add(type);
     }
     setVisibleLayers(newLayers);
+    
+    // Sincronizar filtro dropdown: si solo hay una capa visible, seleccionarla; si hay varias o ninguna, "Todos"
+    if (newLayers.size === 1) {
+      setSelectedType(Array.from(newLayers)[0]);
+    } else {
+      setSelectedType(null);
+    }
   };
 
   // Obtener incidentes cerrados en últimos 5 minutos
@@ -351,7 +358,16 @@ export default function App() {
             </label>
             <select 
               value={selectedType ?? ''} 
-              onChange={(e) => setSelectedType(e.target.value || null)}
+              onChange={(e) => {
+                const newType = e.target.value || null;
+                setSelectedType(newType);
+                // Sincronizar capas: si selecciona un tipo, mostrar solo ese; si "Todos", mostrar todas
+                if (newType) {
+                  setVisibleLayers(new Set([newType]));
+                } else {
+                  setVisibleLayers(new Set(incidentTypes));
+                }
+              }}
               className="form-select form-select-sm"
             >
               <option value="">Todos ({allIncidents.length})</option>
