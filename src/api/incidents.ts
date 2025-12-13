@@ -2,7 +2,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  // Preferir URL absoluta configurada por env (evita rutear por Vite :5173)
+  // Fallback a '/api' para poder usar proxy en desarrollo si se desea.
+  baseURL: (import.meta as any).env?.VITE_API_URL || '/api',
 });
 
 export interface Incident {
