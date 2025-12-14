@@ -920,7 +920,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-light border-top" style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: '#666' }}>
-        © 2025 MOVINGENIA S.A.C. - Todos los derechos reservados
+        © 2025 MOVINGENIA S.A.C.S. - Todos los derechos reservados
       </footer>
     </div>
   );

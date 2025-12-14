@@ -247,8 +247,9 @@ export default function Login() {
 
           {/* Footer */}
           <div className="text-center mt-4 pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.3)' }}>
-            <p className="small mb-0" style={{ color: 'rgba(255, 255, 255, 0.9)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
-              © 2025 MOVINGENIA S.A.C. - Todos los derechos reservados
+            <p className="small mb-0" style={{ color: 'rgba(255, 255, 255, 0.9)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)', lineHeight: '1.6' }}>
+              © 2025 MOVINGENIA S.A.C.S.<br />
+              Todos los derechos reservados
             </p>
           </div>
         </div>
