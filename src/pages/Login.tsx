@@ -83,18 +83,19 @@ export default function Login() {
 
       {/* Formulario de Login */}
       <div 
-        className="card shadow-lg"
+        className="shadow-lg"
         style={{
           width: '100%',
           maxWidth: '420px',
           borderRadius: '16px',
           zIndex: 2,
           margin: '20px',
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)'
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)'
         }}
       >
-        <div className="card-body p-4 p-md-5">
+        <div className="p-4 p-md-5">
           {/* Logo y Título */}
           <div className="text-center mb-4">
             <div 
