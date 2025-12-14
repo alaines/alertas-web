@@ -4,7 +4,7 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.18.230/api/v1';
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 

@@ -44,9 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
-      const response: AuthResponse = await authService.login({ email, password });
+      const response: AuthResponse = await authService.login({ username, password });
       
       // Convertir formato de API a formato interno
       const userData: User = {

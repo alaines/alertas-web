@@ -22,7 +22,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await authService.login({ email: username, password });
+      await authService.login({ username, password });
       navigate('/map');
     } catch (err: any) {
       setError(
