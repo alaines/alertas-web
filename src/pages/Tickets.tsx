@@ -52,7 +52,6 @@ export default function Tickets() {
 
   useEffect(() => {
     loadTickets();
-    loadOperatorUsers();
     
     // Si hay un query param createFor, abrir modal de creación con ese incidentId
     const createForIncident = searchParams.get('createFor');
@@ -72,6 +71,11 @@ export default function Tickets() {
     }
   }, [filterStatus]);
 
+  // Cargar usuarios operadores solo una vez al montar el componente
+  useEffect(() => {
+    loadOperatorUsers();
+  }, []);
+
   const loadOperatorUsers = async () => {
     try {
       const users = await userService.getAllUsers();
@@ -80,6 +84,8 @@ export default function Tickets() {
       setOperatorUsers(operators);
     } catch (err: any) {
       console.error('Error al cargar usuarios operadores:', err);
+      // Si no se pueden cargar usuarios (ej: falta de permisos), dejar la lista vacía
+      setOperatorUsers([]);
     }
   };
 
