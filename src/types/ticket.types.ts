@@ -56,7 +56,7 @@ export interface CreateTicketDto {
   title: string;
   description?: string;
   priority?: number;
-  assignedTo?: string;
+  assignedToUserId?: number;
   source: TicketSource;
   incidentType?: string;
 }

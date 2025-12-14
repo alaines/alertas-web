@@ -43,7 +43,7 @@ export default function Tickets() {
     title: '',
     description: '',
     priority: 3,
-    assignedTo: '',
+    assignedToUserId: undefined,
     source: 'OTHER' as const,
     incidentType: ''
   });
@@ -62,7 +62,7 @@ export default function Tickets() {
         title: '',
         description: '',
         priority: 3,
-        assignedTo: '',
+        assignedToUserId: undefined,
         source: 'WAZE' as const,
         incidentType: ''
       });
@@ -136,7 +136,7 @@ export default function Tickets() {
         title: '',
         description: '',
         priority: 3,
-        assignedTo: '',
+        assignedToUserId: undefined,
         source: 'OTHER' as const,
         incidentType: ''
       });
@@ -617,12 +617,15 @@ export default function Tickets() {
                     <label className="form-label">Asignar a</label>
                     <select
                       className="form-select"
-                      value={createForm.assignedTo}
-                      onChange={(e) => setCreateForm({ ...createForm, assignedTo: e.target.value })}
+                      value={createForm.assignedToUserId || ''}
+                      onChange={(e) => setCreateForm({ 
+                        ...createForm, 
+                        assignedToUserId: e.target.value ? parseInt(e.target.value) : undefined 
+                      })}
                     >
                       <option value="">Sin asignar</option>
                       {operatorUsers.map(user => (
-                        <option key={user.id} value={user.username}>
+                        <option key={user.id} value={user.id}>
                           {user.fullName} (@{user.username})
                         </option>
                       ))}
