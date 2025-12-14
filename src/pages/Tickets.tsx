@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ticketService from '../services/ticket.service';
+import userService from '../services/user.service';
+import type { User } from '../services/user.service';
 import type { Ticket, TicketStatus, CreateTicketDto, ChangeTicketStatusDto } from '../types/ticket.types';
 
 export default function Tickets() {
@@ -18,6 +20,22 @@ export default function Tickets() {
   const [filterStatus, setFilterStatus] = useState<TicketStatus | 'ALL'>('ALL');
   const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, done: 0 });
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [operatorUsers, setOperatorUsers] = useState<User[]>([]);
+
+  // Lista parametrizada de tipos de incidente
+  const incidentTypes = [
+    'Accidente',
+    'Bache',
+    'Señalización defectuosa',
+    'Semáforo dañado',
+    'Vehículo detenido',
+    'Obstrucción de vía',
+    'Inundación',
+    'Derrumbe',
+    'Obras en vía',
+    'Manifestación',
+    'Otro'
+  ];
 
   // Form states
   const [createForm, setCreateForm] = useState<CreateTicketDto>({
@@ -34,6 +52,7 @@ export default function Tickets() {
 
   useEffect(() => {
     loadTickets();
+    loadOperatorUsers();
     
     // Si hay un query param createFor, abrir modal de creación con ese incidentId
     const createForIncident = searchParams.get('createFor');
@@ -52,6 +71,17 @@ export default function Tickets() {
       searchParams.delete('createFor');
     }
   }, [filterStatus]);
+
+  const loadOperatorUsers = async () => {
+    try {
+      const users = await userService.getAllUsers();
+      // Filtrar solo usuarios con rol OPERATOR o ADMIN
+      const operators = users.filter(u => u.role === 'OPERATOR' || u.role === 'ADMIN');
+      setOperatorUsers(operators);
+    } catch (err: any) {
+      console.error('Error al cargar usuarios operadores:', err);
+    }
+  };
 
   const loadTickets = async () => {
     try {
@@ -519,14 +549,17 @@ export default function Tickets() {
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Tipo de Incidente *</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <select
+                    className="form-select"
                     value={createForm.incidentType}
                     onChange={(e) => setCreateForm({ ...createForm, incidentType: e.target.value })}
-                    placeholder="Ej: Accidente, Bache, Señalización, etc."
-                  />
-                  <small className="text-muted">Describe el tipo de problema reportado</small>
+                  >
+                    <option value="">Seleccionar tipo...</option>
+                    {incidentTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <small className="text-muted">Selecciona el tipo de problema reportado</small>
                 </div>
                 {createForm.source === 'WAZE' && (
                   <div className="mb-3">
@@ -578,13 +611,19 @@ export default function Tickets() {
                   </div>
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Asignar a</label>
-                    <input
-                      type="text"
-                      className="form-control"
+                    <select
+                      className="form-select"
                       value={createForm.assignedTo}
                       onChange={(e) => setCreateForm({ ...createForm, assignedTo: e.target.value })}
-                      placeholder="Usuario o email"
-                    />
+                    >
+                      <option value="">Sin asignar</option>
+                      {operatorUsers.map(user => (
+                        <option key={user.id} value={user.username}>
+                          {user.fullName} (@{user.username})
+                        </option>
+                      ))}
+                    </select>
+                    <small className="text-muted">Selecciona un operador para asignar el ticket</small>
                   </div>
                 </div>
               </div>
