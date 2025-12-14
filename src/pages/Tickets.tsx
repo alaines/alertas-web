@@ -161,9 +161,11 @@ export default function Tickets() {
   const handleViewTicket = async (ticket: Ticket) => {
     try {
       const fullTicket = await ticketService.getTicket(ticket.id);
-      setSelectedTicket(fullTicket);
+      const events = await ticketService.getTicketEvents(ticket.id);
+      setSelectedTicket({ ...fullTicket, events });
       setShowDetailModal(true);
     } catch (err: any) {
+      console.error('Error al cargar ticket:', err);
       alert(err.response?.data?.message || 'Error al cargar detalles del ticket');
     }
   };
@@ -496,8 +498,10 @@ export default function Tickets() {
                           <button 
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => handleViewTicket(ticket)}
+                            title="Ver detalles del ticket"
                           >
-                            <i className="fas fa-eye"></i>
+                            <i className="fas fa-eye me-1"></i>
+                            Ver
                           </button>
                         </td>
                       </tr>
