@@ -123,9 +123,9 @@ server {
         access_log off;
     }
 
-    # API Proxy (ajustar según tu backend)
+    # API Proxy - Backend en producción
     location /api/ {
-        proxy_pass http://192.168.18.230:3000/;
+        proxy_pass http://34.66.18.138:3000/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
