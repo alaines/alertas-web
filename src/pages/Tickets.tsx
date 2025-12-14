@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ticketService from '../services/ticket.service';
 import userService from '../services/user.service';
 import { getIncidentByUuid } from '../api/incidents';
@@ -10,6 +11,7 @@ import type { Ticket, TicketStatus, CreateTicketDto, ChangeTicketStatusDto } fro
 
 export default function Tickets() {
   const { user, logout, isOperator, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -307,7 +309,7 @@ export default function Tickets() {
               onClick={() => navigate('/map')}
             >
               <i className="fas fa-map me-2"></i>
-              Mapa
+              {t('nav.map')}
             </button>
             <button 
               className="btn btn-sm btn-outline-primary"
@@ -315,14 +317,14 @@ export default function Tickets() {
               onClick={() => navigate('/dashboard')}
             >
               <i className="fas fa-chart-line me-2"></i>
-              Dashboard
+              {t('nav.dashboard')}
             </button>
             <button 
               className="btn btn-sm btn-primary"
               style={{ fontSize: '14px' }}
             >
               <i className="fas fa-ticket-alt me-2"></i>
-              Tickets
+              {t('nav.tickets')}
             </button>
             <button 
               className="btn btn-sm btn-outline-primary"
@@ -330,7 +332,7 @@ export default function Tickets() {
               onClick={() => navigate('/reports')}
             >
               <i className="fas fa-file-alt me-2"></i>
-              Reportes
+              {t('nav.reports')}
             </button>
             {isAdmin && (
               <button 
@@ -339,7 +341,7 @@ export default function Tickets() {
                 onClick={() => navigate('/admin')}
               >
                 <i className="fas fa-cog me-2"></i>
-                Administración
+                {t('nav.admin')}
               </button>
             )}
           </nav>
@@ -357,7 +359,7 @@ export default function Tickets() {
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
               </div>
-              <span>{user?.name || 'Usuario'}</span>
+              <span>{user?.name || user?.username || 'Usuario'}</span>
             </button>
 
             {/* Dropdown de Usuario */}
@@ -365,6 +367,12 @@ export default function Tickets() {
               <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 3001, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
                   <i className="fas fa-user me-2"></i>Mi Perfil
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-cog me-2"></i>Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
                 </a>
                 {isAdmin && (
                   <a 
@@ -376,15 +384,9 @@ export default function Tickets() {
                       navigate('/admin');
                     }}
                   >
-                    <i className="fas fa-cog me-2"></i>Panel Admin
+                    <i className="fas fa-tools me-2"></i>Panel Admin
                   </a>
                 )}
-                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  <i className="fas fa-cog me-2"></i>Configuración
-                </a>
-                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
-                </a>
                 <a 
                   href="#" 
                   className="d-block p-3 text-decoration-none text-dark hover-light" 
@@ -394,7 +396,7 @@ export default function Tickets() {
                     logout();
                   }}
                 >
-                  <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                  <i className="fas fa-sign-out-alt me-2"></i>{t('nav.logout')}
                 </a>
               </div>
             )}

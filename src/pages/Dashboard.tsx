@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -175,14 +176,14 @@ export default function Dashboard() {
               onClick={() => navigate('/map')}
             >
               <i className="fas fa-map me-2"></i>
-              Mapa
+              {t('nav.map')}
             </button>
             <button 
               className="btn btn-sm btn-primary"
               style={{ fontSize: '14px' }}
             >
               <i className="fas fa-chart-line me-2"></i>
-              Dashboard
+              {t('nav.dashboard')}
             </button>
             {isOperator && (
               <>
@@ -192,7 +193,7 @@ export default function Dashboard() {
                   onClick={() => navigate('/tickets')}
                 >
                   <i className="fas fa-ticket-alt me-2"></i>
-                  Tickets
+                  {t('nav.tickets')}
                 </button>
                 <button 
                   className="btn btn-sm btn-outline-primary"
@@ -200,7 +201,7 @@ export default function Dashboard() {
                   onClick={() => navigate('/reports')}
                 >
                   <i className="fas fa-file-alt me-2"></i>
-                  Reportes
+                  {t('nav.reports')}
                 </button>
               </>
             )}
@@ -211,7 +212,7 @@ export default function Dashboard() {
                 onClick={() => navigate('/admin')}
               >
                 <i className="fas fa-cog me-2"></i>
-                Administración
+                {t('nav.admin')}
               </button>
             )}
           </nav>
@@ -220,16 +221,56 @@ export default function Dashboard() {
         {/* Usuario a la derecha */}
         <div className="d-flex gap-3 align-items-center" style={{ position: 'relative' }}>
           <div style={{ position: 'relative' }}>
-            <div className="d-flex align-items-center gap-2" style={{ fontSize: '14px' }}>
+            <button 
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="btn btn-light p-2 d-flex align-items-center gap-2"
+              style={{ fontSize: '14px' }}
+            >
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
               </div>
-              <span>{user?.username || 'Usuario'}</span>
-            </div>
+              <span>{user?.name || user?.username || 'Usuario'}</span>
+            </button>
+
+            {/* Dropdown de Usuario */}
+            {showUserMenu && (
+              <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 3001, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-user me-2"></i>Mi Perfil
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-cog me-2"></i>Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
+                </a>
+                {isAdmin && (
+                  <a 
+                    href="#" 
+                    className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" 
+                    style={{ fontSize: '14px' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/admin');
+                    }}
+                  >
+                    <i className="fas fa-tools me-2"></i>Panel Admin
+                  </a>
+                )}
+                <a 
+                  href="#" 
+                  className="d-block p-3 text-decoration-none text-dark hover-light" 
+                  style={{ fontSize: '14px', color: '#dc3545' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                  }}
+                >
+                  <i className="fas fa-sign-out-alt me-2"></i>{t('nav.logout')}
+                </a>
+              </div>
+            )}
           </div>
-          <button onClick={logout} className="btn btn-sm btn-outline-danger" style={{ fontSize: '14px' }}>
-            <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-          </button>
         </div>
       </header>
 
@@ -378,7 +419,7 @@ export default function Dashboard() {
                 {Object.entries(stats?.incidentsByType || {}).map(([type, count]) => (
                   <div key={type} className="mb-2">
                     <div className="d-flex justify-content-between mb-1">
-                      <span style={{ fontSize: '14px' }}>{type}</span>
+                      <span style={{ fontSize: '14px' }}>{t(`ticket.type.${type}`) || type}</span>
                       <strong>{count}</strong>
                     </div>
                     <div className="progress" style={{ height: '8px' }}>
@@ -422,7 +463,7 @@ export default function Dashboard() {
                 <hr />
                 {Object.entries(stats?.devicesByType || {}).map(([type, count]) => (
                   <div key={type} className="d-flex justify-content-between mb-2">
-                    <span>{type}</span>
+                    <span>{t(`device.type.${type}`) || type}</span>
                     <strong>{count}</strong>
                   </div>
                 ))}

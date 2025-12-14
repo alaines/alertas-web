@@ -9,6 +9,7 @@ import ticketService from './services/ticket.service';
 import deviceService from './services/device.service';
 import type { Device } from './types/device.types';
 import { useAuth } from './context/AuthContext';
+import { useLanguage } from './context/LanguageContext';
 
 // Centro de Lima aproximado
 const LIMA_CENTER: [number, number] = [-12.0464, -77.0428];
@@ -196,6 +197,7 @@ function getTypeInSpanish(type: string): string {
 export default function App() {
   const navigate = useNavigate();
   const { user, logout, isAdmin, isOperator } = useAuth();
+  const { t } = useLanguage();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -445,7 +447,7 @@ export default function App() {
               style={{ fontSize: '14px' }}
             >
               <i className="fas fa-map me-2"></i>
-              Mapa
+              {t('nav.map')}
             </button>
             <button 
               className="btn btn-sm btn-outline-primary"
@@ -453,7 +455,7 @@ export default function App() {
               onClick={() => navigate('/dashboard')}
             >
               <i className="fas fa-chart-line me-2"></i>
-              Dashboard
+              {t('nav.dashboard')}
             </button>
             {isOperator && (
               <>
@@ -463,7 +465,7 @@ export default function App() {
                   onClick={() => navigate('/tickets')}
                 >
                   <i className="fas fa-ticket-alt me-2"></i>
-                  Tickets
+                  {t('nav.tickets')}
                 </button>
                 <button 
                   className="btn btn-sm btn-outline-primary"
@@ -471,7 +473,7 @@ export default function App() {
                   onClick={() => navigate('/reports')}
                 >
                   <i className="fas fa-file-alt me-2"></i>
-                  Reportes
+                  {t('nav.reports')}
                 </button>
               </>
             )}
@@ -482,7 +484,7 @@ export default function App() {
                 onClick={() => navigate('/admin')}
               >
                 <i className="fas fa-cog me-2"></i>
-                Administración
+                {t('nav.admin')}
               </button>
             )}
           </nav>
@@ -562,6 +564,12 @@ export default function App() {
                 <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
                   <i className="fas fa-user me-2"></i>Mi Perfil
                 </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-cog me-2"></i>Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
+                </a>
                 {isAdmin && (
                   <a 
                     href="#" 
@@ -572,15 +580,9 @@ export default function App() {
                       navigate('/admin');
                     }}
                   >
-                    <i className="fas fa-cog me-2"></i>Panel Admin
+                    <i className="fas fa-tools me-2"></i>Panel Admin
                   </a>
                 )}
-                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  <i className="fas fa-cog me-2"></i>Configuración
-                </a>
-                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
-                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
-                </a>
                 <a 
                   href="#" 
                   className="d-block p-3 text-decoration-none text-dark hover-light" 
@@ -590,7 +592,7 @@ export default function App() {
                     logout();
                   }}
                 >
-                  <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                  <i className="fas fa-sign-out-alt me-2"></i>{t('nav.logout')}
                 </a>
               </div>
             )}

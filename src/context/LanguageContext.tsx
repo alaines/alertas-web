@@ -111,11 +111,28 @@ const translations = {
     'ticket.type.CONSTRUCTION': 'Construcción',
     'ticket.type.OBJECT_IN_ROADWAY': 'Objeto en la Vía',
     
+    // Ticket Status
+    'ticket.status.OPEN': 'Abierto',
+    'ticket.status.IN_PROGRESS': 'En Progreso',
+    'ticket.status.DONE': 'Completado',
+    
+    // Ticket Source
+    'ticket.source.WAZE': 'Waze',
+    'ticket.source.PHONE_CALL': 'Llamada Telefónica',
+    'ticket.source.WHATSAPP': 'WhatsApp',
+    'ticket.source.INSPECTOR': 'Inspector',
+    'ticket.source.OTHER': 'Otro',
+    
     // Device Types
     'device.type.CAMERA': 'Cámara',
     'device.type.TRAFFIC_LIGHT': 'Semáforo',
     'device.type.SENSOR': 'Sensor',
     'device.type.COUNTING_CAMERA': 'Cámara de Conteo',
+    
+    // Device Status
+    'device.status.ACTIVE': 'Activo',
+    'device.status.INACTIVE': 'Inactivo',
+    'device.status.MAINTENANCE': 'Mantenimiento',
     
     // Settings
     'settings.language': 'Idioma',
@@ -225,11 +242,28 @@ const translations = {
     'ticket.type.CONSTRUCTION': 'Construction',
     'ticket.type.OBJECT_IN_ROADWAY': 'Object in Roadway',
     
+    // Ticket Status
+    'ticket.status.OPEN': 'Open',
+    'ticket.status.IN_PROGRESS': 'In Progress',
+    'ticket.status.DONE': 'Completed',
+    
+    // Ticket Source
+    'ticket.source.WAZE': 'Waze',
+    'ticket.source.PHONE_CALL': 'Phone Call',
+    'ticket.source.WHATSAPP': 'WhatsApp',
+    'ticket.source.INSPECTOR': 'Inspector',
+    'ticket.source.OTHER': 'Other',
+    
     // Device Types
     'device.type.CAMERA': 'Camera',
     'device.type.TRAFFIC_LIGHT': 'Traffic Light',
     'device.type.SENSOR': 'Sensor',
     'device.type.COUNTING_CAMERA': 'Counting Camera',
+    
+    // Device Status
+    'device.status.ACTIVE': 'Active',
+    'device.status.INACTIVE': 'Inactive',
+    'device.status.MAINTENANCE': 'Maintenance',
     
     // Settings
     'settings.language': 'Language',

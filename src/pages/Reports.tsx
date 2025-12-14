@@ -21,6 +21,7 @@ export default function Reports() {
   const [endDate, setEndDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<any[]>([]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     if (!user || !isOperator) {
@@ -61,7 +62,7 @@ export default function Reports() {
             .map(inc => ({
               [t('field.id')]: inc.id,
               [t('field.uuid')]: inc.uuid,
-              [t('field.type')]: inc.type,
+              [t('field.type')]: t(`ticket.type.${inc.type}`) || inc.type,
               [t('field.category')]: inc.category || t('field.na'),
               [t('field.city')]: inc.city || t('field.na'),
               [t('field.street')]: inc.street || t('field.na'),
@@ -92,9 +93,9 @@ export default function Reports() {
                 [t('field.id')]: ticket.id,
                 [t('field.title')]: ticket.title,
                 [t('field.description')]: ticket.description || t('field.na'),
-                [t('field.status')]: ticket.status,
+                [t('field.status')]: t(`ticket.status.${ticket.status}`) || ticket.status,
                 [t('field.priority')]: ticket.priority || t('field.na'),
-                [t('field.source')]: ticket.source,
+                [t('field.source')]: t(`ticket.source.${ticket.source}`) || ticket.source,
                 [t('field.incidentType')]: ticket.incidentType || t('field.na'),
                 [t('field.createdBy')]: typeof ticket.createdBy === 'object' 
                   ? (ticket.createdBy?.username || ticket.createdBy?.fullName || t('field.na'))
@@ -114,9 +115,9 @@ export default function Reports() {
           const devices = await deviceService.getAllDevices();
           data = devices.map(device => ({
             [t('field.id')]: device.id,
-            [t('field.type')]: device.type,
+            [t('field.type')]: t(`device.type.${device.type}`) || device.type,
             [t('field.brand')]: device.brand,
-            [t('field.status')]: device.status,
+            [t('field.status')]: t(`device.status.${device.status}`) || device.status,
             [t('field.installYear')]: device.installationYear,
             [t('field.manufactureYear')]: device.manufacturingYear,
             [t('field.ipAddress')]: device.ipAddress,
@@ -215,7 +216,7 @@ export default function Reports() {
               onClick={() => navigate('/map')}
             >
               <i className="fas fa-map me-2"></i>
-              Mapa
+              {t('nav.map')}
             </button>
             <button 
               className="btn btn-sm btn-outline-primary"
@@ -223,7 +224,7 @@ export default function Reports() {
               onClick={() => navigate('/dashboard')}
             >
               <i className="fas fa-chart-line me-2"></i>
-              Dashboard
+              {t('nav.dashboard')}
             </button>
             {isOperator && (
               <>
@@ -233,14 +234,14 @@ export default function Reports() {
                   onClick={() => navigate('/tickets')}
                 >
                   <i className="fas fa-ticket-alt me-2"></i>
-                  Tickets
+                  {t('nav.tickets')}
                 </button>
                 <button 
                   className="btn btn-sm btn-primary"
                   style={{ fontSize: '14px' }}
                 >
                   <i className="fas fa-file-alt me-2"></i>
-                  Reportes
+                  {t('nav.reports')}
                 </button>
               </>
             )}
@@ -251,7 +252,7 @@ export default function Reports() {
                 onClick={() => navigate('/admin')}
               >
                 <i className="fas fa-cog me-2"></i>
-                Administración
+                {t('nav.admin')}
               </button>
             )}
           </nav>
@@ -260,16 +261,56 @@ export default function Reports() {
         {/* Usuario a la derecha */}
         <div className="d-flex gap-3 align-items-center" style={{ position: 'relative' }}>
           <div style={{ position: 'relative' }}>
-            <div className="d-flex align-items-center gap-2" style={{ fontSize: '14px' }}>
+            <button 
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="btn btn-light p-2 d-flex align-items-center gap-2"
+              style={{ fontSize: '14px' }}
+            >
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
               </div>
-              <span>{user?.username || 'Usuario'}</span>
-            </div>
+              <span>{user?.name || user?.username || 'Usuario'}</span>
+            </button>
+
+            {/* Dropdown de Usuario */}
+            {showUserMenu && (
+              <div className="bg-white border rounded" style={{ position: 'absolute', top: '100%', right: '0', width: '200px', zIndex: 3001, marginTop: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-user me-2"></i>Mi Perfil
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-cog me-2"></i>Configuración
+                </a>
+                <a href="#" className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" style={{ fontSize: '14px' }}>
+                  <i className="fas fa-lock me-2"></i>Cambiar Contraseña
+                </a>
+                {isAdmin && (
+                  <a 
+                    href="#" 
+                    className="d-block p-3 text-decoration-none text-dark border-bottom hover-light" 
+                    style={{ fontSize: '14px' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/admin');
+                    }}
+                  >
+                    <i className="fas fa-tools me-2"></i>Panel Admin
+                  </a>
+                )}
+                <a 
+                  href="#" 
+                  className="d-block p-3 text-decoration-none text-dark hover-light" 
+                  style={{ fontSize: '14px', color: '#dc3545' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logout();
+                  }}
+                >
+                  <i className="fas fa-sign-out-alt me-2"></i>{t('nav.logout')}
+                </a>
+              </div>
+            )}
           </div>
-          <button onClick={logout} className="btn btn-sm btn-outline-danger" style={{ fontSize: '14px' }}>
-            <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-          </button>
         </div>
       </header>
 

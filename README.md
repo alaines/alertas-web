@@ -76,7 +76,7 @@ Sistema completo de monitoreo de alertas viales en tiempo real con autenticació
 - **Reporte de tickets** - Estado, prioridad, tiempos de resolución, asignaciones
 - **Reporte de dispositivos** - Inventario completo con estado operativo
 
-### Soporte Multiidioma 🌐
+### Soporte Multiidioma 
 - **Español e Inglés** - Sistema completamente bilingüe
 - **Configuración persistente** - Idioma guardado en localStorage
 - **Interfaz completa traducida** - Dashboard, Reportes, Navegación
@@ -123,7 +123,7 @@ npm install
 
 ```bash
 # Iniciar servidor de desarrollo
-## 🔑 Autenticación
+## Autenticación
 
 ### Credenciales Iniciales
 ```
@@ -170,7 +170,7 @@ Rol: ADMIN (acceso completo)
 
 Otros usuarios (operator, viewer) deben ser creados desde el panel de administración.
 
-## 🔧 Configuración
+## Configuración
 
 ### Variables de Entorno (`.env`)
 

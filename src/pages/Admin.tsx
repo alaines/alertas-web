@@ -8,6 +8,7 @@ import Devices from './Devices';
 
 export default function Admin() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'users' | 'devices' | 'settings' | 'logs'>('users');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -31,7 +32,15 @@ export default function Admin() {
               onClick={() => navigate('/map')}
             >
               <i className="fas fa-map me-2"></i>
-              Mapa
+              {t('nav.map')}
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/dashboard')}
+            >
+              <i className="fas fa-chart-line me-2"></i>
+              {t('nav.dashboard')}
             </button>
             <button 
               className="btn btn-sm btn-outline-primary"
@@ -39,14 +48,22 @@ export default function Admin() {
               onClick={() => navigate('/tickets')}
             >
               <i className="fas fa-ticket-alt me-2"></i>
-              Tickets
+              {t('nav.tickets')}
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/reports')}
+            >
+              <i className="fas fa-file-alt me-2"></i>
+              {t('nav.reports')}
             </button>
             <button 
               className="btn btn-sm btn-primary"
               style={{ fontSize: '14px' }}
             >
               <i className="fas fa-cog me-2"></i>
-              Administración
+              {t('nav.admin')}
             </button>
           </nav>
         </div>
@@ -63,7 +80,7 @@ export default function Admin() {
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0056b3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className="fas fa-user" style={{ color: 'white', fontSize: '16px' }}></i>
               </div>
-              <span>{user?.name || 'Usuario'}</span>
+              <span>{user?.name || user?.username || 'Usuario'}</span>
             </button>
 
             {/* Dropdown de Usuario */}
@@ -87,7 +104,7 @@ export default function Admin() {
                     logout();
                   }}
                 >
-                  <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                  <i className="fas fa-sign-out-alt me-2"></i>{t('nav.logout')}
                 </a>
               </div>
             )}
