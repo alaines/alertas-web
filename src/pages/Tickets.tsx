@@ -647,17 +647,17 @@ export default function Tickets() {
 
       {/* Modal Detalle Ticket */}
       {showDetailModal && selectedTicket && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-xl">
-            <div className="modal-content">
-              <div className="modal-header">
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflowY: 'auto' }}>
+          <div className="modal-dialog modal-xl" style={{ maxHeight: '90vh', margin: '1.75rem auto' }}>
+            <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+              <div className="modal-header" style={{ flexShrink: 0 }}>
                 <h5 className="modal-title">
                   <i className="fas fa-ticket-alt me-2"></i>
                   Ticket #{selectedTicket.id} - {selectedTicket.title}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowDetailModal(false)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ overflowY: 'auto', flexGrow: 1 }}>
                 <div className="row">
                   <div className="col-md-8">
                     {/* Información del Ticket */}
@@ -877,7 +877,7 @@ export default function Tickets() {
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ flexShrink: 0 }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
                   Cerrar
                 </button>
