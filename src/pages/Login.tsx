@@ -4,11 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth.service';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
+  const [forgotError, setForgotError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,7 +22,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await authService.login({ email, password });
+      await authService.login({ email: username, password });
       navigate('/map');
     } catch (err: any) {
       setError(
@@ -26,6 +31,25 @@ export default function Login() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotSuccess('');
+
+    try {
+      // Aquí iría la llamada al endpoint de recuperación de contraseña
+      // await authService.forgotPassword(forgotEmail);
+      setForgotSuccess('Se ha enviado un correo con instrucciones para restablecer tu contraseña.');
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setForgotEmail('');
+        setForgotSuccess('');
+      }, 3000);
+    } catch (err: any) {
+      setForgotError('Error al procesar la solicitud. Por favor intenta nuevamente.');
     }
   };
 
@@ -100,20 +124,21 @@ export default function Login() {
               </div>
             )}
 
-            {/* Email */}
+            {/* Username */}
             <div className="mb-3">
-              <label htmlFor="email" className="form-label fw-semibold">
-                <i className="fas fa-envelope me-2"></i>
-                Email
+              <label htmlFor="username" className="form-label fw-semibold">
+                <i className="fas fa-user me-2"></i>
+                Usuario
               </label>
               <input
-                type="email"
+                type="text"
                 className="form-control"
-                id="email"
-                placeholder="admin@alertas.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
                 style={{ borderRadius: '8px', padding: '12px' }}
               />
             </div>
@@ -124,16 +149,34 @@ export default function Login() {
                 <i className="fas fa-lock me-2"></i>
                 Contraseña
               </label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                placeholder="Ingresa tu contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ borderRadius: '8px', padding: '12px' }}
-              />
+              <div className="position-relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control"
+                  id="password"
+                  placeholder="Ingresa tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  style={{ borderRadius: '8px', padding: '12px', paddingRight: '45px' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-link position-absolute"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    top: '50%',
+                    right: '8px',
+                    transform: 'translateY(-50%)',
+                    padding: '4px 8px',
+                    color: '#6c757d'
+                  }}
+                  tabIndex={-1}
+                >
+                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
             </div>
 
             {/* Recordar y Olvidaste */}
@@ -155,7 +198,7 @@ export default function Login() {
                 className="small text-decoration-none"
                 onClick={(e) => {
                   e.preventDefault();
-                  alert('Funcionalidad de recuperación de contraseña pendiente');
+                  setShowForgotModal(true);
                 }}
               >
                 ¿Olvidaste tu contraseña?
@@ -182,6 +225,94 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* Modal Recuperar Contraseña */}
+      {showForgotModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{ borderRadius: '12px' }}>
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title">
+                  <i className="fas fa-key me-2 text-primary"></i>
+                  Recuperar Contraseña
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => {
+                    setShowForgotModal(false);
+                    setForgotEmail('');
+                    setForgotError('');
+                    setForgotSuccess('');
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body pt-2">
+                <p className="text-muted mb-3">
+                  Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
+                </p>
+
+                {forgotSuccess && (
+                  <div className="alert alert-success py-2" role="alert">
+                    <i className="fas fa-check-circle me-2"></i>
+                    {forgotSuccess}
+                  </div>
+                )}
+
+                {forgotError && (
+                  <div className="alert alert-danger py-2" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {forgotError}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPassword}>
+                  <div className="mb-3">
+                    <label htmlFor="forgotEmail" className="form-label fw-semibold">
+                      <i className="fas fa-envelope me-2"></i>
+                      Correo Electrónico
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="forgotEmail"
+                      placeholder="correo@ejemplo.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      style={{ borderRadius: '8px', padding: '12px' }}
+                    />
+                  </div>
+                  <div className="d-grid gap-2">
+                    <button
+                      type="submit"
+                      className="btn btn-primary py-2 fw-semibold"
+                      style={{ borderRadius: '8px' }}
+                      disabled={!forgotEmail}
+                    >
+                      <i className="fas fa-paper-plane me-2"></i>
+                      Enviar Instrucciones
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary py-2"
+                      style={{ borderRadius: '8px' }}
+                      onClick={() => {
+                        setShowForgotModal(false);
+                        setForgotEmail('');
+                        setForgotError('');
+                        setForgotSuccess('');
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
