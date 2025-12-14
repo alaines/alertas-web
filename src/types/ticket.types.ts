@@ -23,7 +23,7 @@ export interface Ticket {
   incidentType: string | null;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
+  createdBy: string | { id: number; username: string; fullName: string };
   assignedTo: string | null;
   deletedAt: string | null;
   // Relaciones
@@ -48,7 +48,7 @@ export interface TicketEvent {
   message: string | null;
   payload: Record<string, any> | null;
   createdAt: string;
-  createdBy: string;
+  createdBy: string | { id: number; username: string; fullName: string };
 }
 
 export interface CreateTicketDto {

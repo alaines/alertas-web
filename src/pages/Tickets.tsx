@@ -719,7 +719,11 @@ export default function Tickets() {
                         </div>
                         <div className="row mb-2">
                           <div className="col-sm-3 text-muted">Creado por:</div>
-                          <div className="col-sm-9">{selectedTicket.createdBy}</div>
+                          <div className="col-sm-9">
+                            {typeof selectedTicket.createdBy === 'object' && selectedTicket.createdBy !== null
+                              ? (selectedTicket.createdBy as any).username || (selectedTicket.createdBy as any).fullName || 'Desconocido'
+                              : selectedTicket.createdBy || 'Desconocido'}
+                          </div>
                         </div>
                         <div className="row mb-2">
                           <div className="col-sm-3 text-muted">Creado:</div>
@@ -746,7 +750,11 @@ export default function Tickets() {
                                   <strong className="text-primary">{event.eventType}</strong>
                                   <small className="text-muted">{formatDate(event.createdAt)}</small>
                                 </div>
-                                <div className="small text-muted">Por: {event.createdBy}</div>
+                                <div className="small text-muted">
+                                  Por: {typeof event.createdBy === 'object' && event.createdBy !== null
+                                    ? (event.createdBy as any).username || (event.createdBy as any).fullName || 'Desconocido'
+                                    : event.createdBy || 'Desconocido'}
+                                </div>
                                 {event.fromStatus && event.toStatus && (
                                   <div className="small">
                                     <span className={`badge ${getStatusBadge(event.fromStatus)}`}>
