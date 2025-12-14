@@ -89,7 +89,9 @@ export default function Login() {
           maxWidth: '420px',
           borderRadius: '16px',
           zIndex: 2,
-          margin: '20px'
+          margin: '20px',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)'
         }}
       >
         <div className="card-body p-4 p-md-5">
