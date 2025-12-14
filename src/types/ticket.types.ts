@@ -14,7 +14,7 @@ export type TicketSource = 'WAZE' | 'PHONE_CALL' | 'WHATSAPP' | 'INSPECTOR' | 'O
 
 export interface Ticket {
   id: number;
-  incidentId: number | null;
+  incidentUuid: string | null;
   title: string;
   description: string | null;
   status: TicketStatus;
@@ -24,7 +24,7 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   createdBy: string | { id: number; username: string; fullName: string };
-  assignedTo: string | null;
+  assignedTo: string | { id: number; username: string; fullName: string } | null;
   deletedAt: string | null;
   // Relaciones
   incident?: {
@@ -52,7 +52,7 @@ export interface TicketEvent {
 }
 
 export interface CreateTicketDto {
-  incidentId?: number | null;
+  incidentUuid?: string | null;
   title: string;
   description?: string;
   priority?: number;

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ticketService from '../services/ticket.service';
 import userService from '../services/user.service';
+import { getIncidentByUuid } from '../api/incidents';
 import type { User } from '../services/user.service';
 import type { Ticket, TicketStatus, CreateTicketDto, ChangeTicketStatusDto } from '../types/ticket.types';
 
@@ -39,7 +40,7 @@ export default function Tickets() {
 
   // Form states
   const [createForm, setCreateForm] = useState<CreateTicketDto>({
-    incidentId: null,
+    incidentUuid: null,
     title: '',
     description: '',
     priority: 3,
@@ -49,27 +50,78 @@ export default function Tickets() {
   });
   const [commentText, setCommentText] = useState('');
   const [statusChangeData, setStatusChangeData] = useState<ChangeTicketStatusDto>({ status: 'OPEN' as TicketStatus, message: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
 
   useEffect(() => {
     loadTickets();
-    
-    // Si hay un query param createFor, abrir modal de creación con ese incidentId
+    setCurrentPage(1); // Resetear a la primera página al cambiar filtro
+  }, [filterStatus]);
+
+  // Efecto separado para manejar la creación de ticket desde el mapa
+  useEffect(() => {
     const createForIncident = searchParams.get('createFor');
     if (createForIncident && isOperator) {
-      setCreateForm({
-        incidentId: parseInt(createForIncident),
-        title: '',
-        description: '',
-        priority: 3,
-        assignedToUserId: undefined,
-        source: 'WAZE' as const,
-        incidentType: ''
-      });
-      setShowCreateModal(true);
-      // Limpiar el query param
-      searchParams.delete('createFor');
+      console.log('=== CREAR TICKET DESDE MAPA ===');
+      console.log('UUID del incidente:', createForIncident);
+      
+      const loadIncidentData = async () => {
+        const incidentUuid = createForIncident;
+        const incident = await getIncidentByUuid(incidentUuid);
+        
+        console.log('Incidente cargado:', incident);
+        
+        if (incident) {
+          // Mapear el tipo de incidente a incidentType
+          const incidentTypeMap: { [key: string]: string } = {
+            'ACCIDENT': 'Accidente',
+            'CONGESTION': 'Obstrucción de vía',
+            'CONSTRUCTION': 'Obras en vía',
+            'ROAD_CLOSED': 'Obstrucción de vía',
+            'HAZARD': 'Otro'
+          };
+          
+          // Generar título sugerido basado en el incidente
+          const suggestedTitle = `${incident.type} - ${incident.street || incident.city || 'Ubicación desconocida'}`;
+          
+          // Determinar prioridad basada en el incidente (usar la del incidente o un valor por defecto)
+          const priority = incident.priority || 3;
+          
+          const formData = {
+            incidentUuid: incident.uuid,
+            title: suggestedTitle,
+            description: `Incidente reportado en ${incident.street || incident.city || 'ubicación desconocida'}. Tipo: ${incident.type}${incident.subtype ? ` - ${incident.subtype}` : ''}`,
+            priority: priority,
+            assignedToUserId: undefined,
+            source: 'WAZE' as const,
+            incidentType: incidentTypeMap[incident.type] || 'Otro'
+          };
+          
+          console.log('Datos del formulario a establecer:', formData);
+          setCreateForm(formData);
+        } else {
+          console.warn('No se pudo cargar el incidente');
+          // Si no se encuentra el incidente, usar valores por defecto
+          setCreateForm({
+            incidentUuid: incidentUuid,
+            title: '',
+            description: '',
+            priority: 3,
+            assignedToUserId: undefined,
+            source: 'WAZE' as const,
+            incidentType: ''
+          });
+        }
+        
+        setShowCreateModal(true);
+      };
+      
+      loadIncidentData();
+      
+      // Limpiar el query param después de procesarlo
+      navigate('/tickets', { replace: true });
     }
-  }, [filterStatus]);
+  }, [searchParams, isOperator, navigate]);
 
   // Cargar usuarios operadores solo una vez al montar el componente
   useEffect(() => {
@@ -129,8 +181,8 @@ export default function Tickets() {
       return;
     }
     
-    if (createForm.source === 'WAZE' && !createForm.incidentId) {
-      alert('El ID del incidente es obligatorio cuando la fuente es WAZE');
+    if (createForm.source === 'WAZE' && !createForm.incidentUuid) {
+      alert('El UUID del incidente es obligatorio para tickets de WAZE');
       return;
     }
 
@@ -138,7 +190,7 @@ export default function Tickets() {
       await ticketService.createTicket(createForm);
       setShowCreateModal(false);
       setCreateForm({
-        incidentId: null,
+        incidentUuid: null,
         title: '',
         description: '',
         priority: 3,
@@ -153,7 +205,7 @@ export default function Tickets() {
       
       // Mensajes más específicos según el error
       if (err.response?.status === 404) {
-        alert(`Incidente no encontrado: El incidente con ID ${createForm.incidentId} no existe en el sistema.`);
+        alert(`Incidente no encontrado: El incidente con UUID ${createForm.incidentUuid} no existe en el sistema.`);
       } else if (err.response?.status === 400) {
         alert(`Datos inválidos: ${errorMessage}`);
       } else if (err.response?.status === 401 || err.response?.status === 403) {
@@ -258,11 +310,27 @@ export default function Tickets() {
               Mapa
             </button>
             <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/dashboard')}
+            >
+              <i className="fas fa-chart-line me-2"></i>
+              Dashboard
+            </button>
+            <button 
               className="btn btn-sm btn-primary"
               style={{ fontSize: '14px' }}
             >
               <i className="fas fa-ticket-alt me-2"></i>
               Tickets
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/reports')}
+            >
+              <i className="fas fa-file-alt me-2"></i>
+              Reportes
             </button>
             {isAdmin && (
               <button 
@@ -417,7 +485,8 @@ export default function Tickets() {
                 <p>No hay tickets para mostrar</p>
               </div>
             ) : (
-              <div className="table-responsive">
+              <>
+              <div className="table-responsive" style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto' }}>
                 <table className="table table-hover">
                   <thead>
                     <tr>
@@ -434,7 +503,9 @@ export default function Tickets() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.map(ticket => (
+                    {tickets
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map(ticket => (
                       <tr key={ticket.id}>
                         <td>#{ticket.id}</td>
                         <td>
@@ -469,9 +540,9 @@ export default function Tickets() {
                           </span>
                         </td>
                         <td>
-                          {ticket.incidentId ? (
+                          {ticket.incidentUuid ? (
                             <span className="badge bg-secondary">
-                              Incidente #{ticket.incidentId}
+                              UUID: {ticket.incidentUuid.substring(0, 8)}...
                             </span>
                           ) : (
                             <span className="text-muted small">N/A</span>
@@ -491,7 +562,9 @@ export default function Tickets() {
                           {ticket.assignedTo ? (
                             <span className="small">
                               <i className="fas fa-user me-1"></i>
-                              {ticket.assignedTo}
+                              {typeof ticket.assignedTo === 'object' && ticket.assignedTo !== null
+                                ? (ticket.assignedTo as any).username || (ticket.assignedTo as any).fullName || 'Asignado'
+                                : ticket.assignedTo}
                             </span>
                           ) : (
                             <span className="text-muted small">Sin asignar</span>
@@ -515,6 +588,68 @@ export default function Tickets() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Paginación */}
+              {tickets.length > itemsPerPage && (
+                <div className="d-flex justify-content-between align-items-center mt-3 px-3">
+                  <div className="text-muted small">
+                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, tickets.length)} de {tickets.length} tickets
+                  </div>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0">
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                        >
+                          <i className="fas fa-chevron-left"></i>
+                        </button>
+                      </li>
+                      {Array.from({ length: Math.ceil(tickets.length / itemsPerPage) }, (_, i) => i + 1)
+                        .filter(page => {
+                          // Mostrar siempre la primera y última página
+                          if (page === 1 || page === Math.ceil(tickets.length / itemsPerPage)) return true;
+                          // Mostrar páginas cercanas a la actual
+                          return Math.abs(page - currentPage) <= 1;
+                        })
+                        .map((page, index, array) => {
+                          // Agregar puntos suspensivos si hay saltos
+                          const prevPage = array[index - 1];
+                          const showEllipsis = prevPage && page - prevPage > 1;
+                          
+                          return (
+                            <>
+                              {showEllipsis && (
+                                <li key={`ellipsis-${page}`} className="page-item disabled">
+                                  <span className="page-link">...</span>
+                                </li>
+                              )}
+                              <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                                <button 
+                                  className="page-link" 
+                                  onClick={() => setCurrentPage(page)}
+                                >
+                                  {page}
+                                </button>
+                              </li>
+                            </>
+                          );
+                        })}
+                      <li className={`page-item ${currentPage === Math.ceil(tickets.length / itemsPerPage) ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === Math.ceil(tickets.length / itemsPerPage)}
+                        >
+                          <i className="fas fa-chevron-right"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>
@@ -523,8 +658,8 @@ export default function Tickets() {
       {/* Modal Crear Ticket */}
       {showCreateModal && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
+          <div className="modal-dialog modal-lg" style={{ maxHeight: '90vh', margin: '1.75rem auto' }}>
+            <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fas fa-plus me-2"></i>
@@ -532,10 +667,10 @@ export default function Tickets() {
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setShowCreateModal(false)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
                 <div className="alert alert-info mb-3">
                   <i className="fas fa-info-circle me-2"></i>
-                  <strong>Nota:</strong> El ID del incidente es obligatorio solo cuando la fuente es WAZE. 
+                  <strong>Nota:</strong> El UUID del incidente es obligatorio solo cuando la fuente es WAZE. 
                   Para otras fuentes, puedes crear el ticket sin vincular a un incidente específico.
                 </div>
                 <div className="mb-3">
@@ -546,7 +681,7 @@ export default function Tickets() {
                     onChange={(e) => setCreateForm({ 
                       ...createForm, 
                       source: e.target.value as 'WAZE' | 'PHONE_CALL' | 'WHATSAPP' | 'INSPECTOR' | 'OTHER',
-                      incidentId: e.target.value !== 'WAZE' ? null : createForm.incidentId
+                      incidentUuid: e.target.value !== 'WAZE' ? null : createForm.incidentUuid
                     })}
                   >
                     <option value="WAZE">Waze (Mapa)</option>
@@ -573,15 +708,15 @@ export default function Tickets() {
                 </div>
                 {createForm.source === 'WAZE' && (
                   <div className="mb-3">
-                    <label className="form-label">ID del Incidente *</label>
+                    <label className="form-label">UUID del Incidente *</label>
                     <input
-                      type="number"
+                      type="text"
                       className="form-control"
-                      value={createForm.incidentId || ''}
-                      onChange={(e) => setCreateForm({ ...createForm, incidentId: parseInt(e.target.value) || null })}
-                      placeholder="Ej: 123"
+                      value={createForm.incidentUuid || ''}
+                      onChange={(e) => setCreateForm({ ...createForm, incidentUuid: e.target.value || null })}
+                      placeholder="Ej: abc123-def456"
                     />
-                    <small className="text-muted">Ingresa el ID de un incidente existente en el mapa</small>
+                    <small className="text-muted">UUID del incidente de Waze</small>
                   </div>
                 )}
                 <div className="mb-3">
@@ -724,7 +859,13 @@ export default function Tickets() {
                         </div>
                         <div className="row mb-2">
                           <div className="col-sm-3 text-muted">Asignado a:</div>
-                          <div className="col-sm-9">{selectedTicket.assignedTo || 'Sin asignar'}</div>
+                          <div className="col-sm-9">
+                            {selectedTicket.assignedTo
+                              ? (typeof selectedTicket.assignedTo === 'object' && selectedTicket.assignedTo !== null
+                                  ? (selectedTicket.assignedTo as any).username || (selectedTicket.assignedTo as any).fullName || 'Asignado'
+                                  : selectedTicket.assignedTo)
+                              : 'Sin asignar'}
+                          </div>
                         </div>
                         <div className="row mb-2">
                           <div className="col-sm-3 text-muted">Creado por:</div>
@@ -778,7 +919,14 @@ export default function Tickets() {
                                 {event.message && (
                                   <div className="mt-2 p-2 bg-light rounded">
                                     <i className="fas fa-comment me-2"></i>
-                                    {event.message}
+                                    {/* Si el mensaje contiene "Asignado a usuario:" y hay payload con datos del usuario, mostrar el nombre */}
+                                    {event.message.includes('Asignado a usuario:') && event.payload?.assignedToUser ? (
+                                      <>
+                                        Asignado a usuario: {event.payload.assignedToUser.username || event.payload.assignedToUser.fullName || 'Usuario'}
+                                      </>
+                                    ) : (
+                                      event.message
+                                    )}
                                   </div>
                                 )}
                               </div>

@@ -1,13 +1,15 @@
 // src/pages/Admin.tsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import userService, { type User, type CreateUserDto, type UpdateUserDto } from '../services/user.service';
+import Devices from './Devices';
 
 export default function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'logs'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'devices' | 'settings' | 'logs'>('users');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -107,6 +109,13 @@ export default function Admin() {
                 Usuarios
               </button>
               <button
+                className={`btn text-start ${activeTab === 'devices' ? 'btn-primary' : 'btn-light'}`}
+                onClick={() => setActiveTab('devices')}
+              >
+                <i className="fas fa-hdd me-2"></i>
+                Periféricos
+              </button>
+              <button
                 className={`btn text-start ${activeTab === 'settings' ? 'btn-primary' : 'btn-light'}`}
                 onClick={() => setActiveTab('settings')}
               >
@@ -127,6 +136,7 @@ export default function Admin() {
         {/* Contenido Principal */}
         <main className="flex-fill p-4" style={{ overflowY: 'auto', backgroundColor: '#f8f9fa' }}>
           {activeTab === 'users' && <UsersTab />}
+          {activeTab === 'devices' && <Devices />}
           {activeTab === 'settings' && <SettingsTab />}
           {activeTab === 'logs' && <LogsTab />}
         </main>
@@ -441,11 +451,51 @@ function UsersTab() {
 }
 
 function SettingsTab() {
+  const { language, setLanguage, t } = useLanguage();
+  const [saved, setSaved] = useState(false);
+
+  const handleLanguageChange = (newLang: 'es' | 'en') => {
+    setLanguage(newLang);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
   return (
     <div>
       <h2 className="h4 mb-4">Configuración del Sistema</h2>
       
       <div className="row">
+        {/* Language Settings */}
+        <div className="col-md-6 mb-4">
+          <div className="card">
+            <div className="card-header">
+              <h5 className="mb-0">
+                <i className="fas fa-language me-2"></i>
+                {t('settings.language')}
+              </h5>
+            </div>
+            <div className="card-body">
+              <div className="mb-3">
+                <label className="form-label">{t('settings.selectLanguage')}</label>
+                <select 
+                  className="form-select" 
+                  value={language}
+                  onChange={(e) => handleLanguageChange(e.target.value as 'es' | 'en')}
+                >
+                  <option value="es">{t('settings.spanish')}</option>
+                  <option value="en">{t('settings.english')}</option>
+                </select>
+              </div>
+              {saved && (
+                <div className="alert alert-success" role="alert">
+                  <i className="fas fa-check-circle me-2"></i>
+                  {t('settings.changesSaved')}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="col-md-6 mb-4">
           <div className="card">
             <div className="card-header">

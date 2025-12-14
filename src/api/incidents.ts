@@ -19,6 +19,8 @@ export interface Incident {
   distance?: number;
   closedAt?: string;     // timestamp cuando fue cerrado
   closedBy?: string;     // quién lo cerró (ej: "Waze")
+  hasOpenTicket?: boolean; // indica si tiene tickets abiertos
+  ticketCount?: number;    // número de tickets asociados
 }
 
 // Datos de prueba para desarrollo
@@ -93,5 +95,25 @@ export async function fetchIncidents(params: {
   } catch (error) {
     console.warn('No se pudo conectar a la API, usando datos de prueba');
     return MOCK_INCIDENTS;
+  }
+}
+
+export async function getIncidentById(id: number): Promise<Incident | null> {
+  try {
+    const res = await api.get<Incident>(`/incidents/${id}`);
+    return res.data;
+  } catch (error) {
+    console.warn('No se pudo obtener el incidente');
+    return null;
+  }
+}
+
+export async function getIncidentByUuid(uuid: string): Promise<Incident | null> {
+  try {
+    const res = await api.get<Incident>(`/incidents/uuid/${uuid}`);
+    return res.data;
+  } catch (error) {
+    console.warn('No se pudo obtener el incidente por UUID');
+    return null;
   }
 }

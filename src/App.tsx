@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { fetchIncidents } from './api/incidents';
+import { fetchIncidents, getIncidentByUuid } from './api/incidents';
 import type { Incident } from './api/incidents';
+import ticketService from './services/ticket.service';
+import deviceService from './services/device.service';
+import type { Device } from './types/device.types';
 import { useAuth } from './context/AuthContext';
 
 // Centro de Lima aproximado
@@ -32,26 +35,72 @@ function getIncidentConfig(type: string) {
   return incidentConfig[type] || { color: '#999999', icon: 'fas fa-map-marker-alt' };
 }
 
+// Configuración de dispositivos
+const deviceConfig: Record<string, { color: string; icon: string; label: string }> = {
+  'CAMERA': { color: '#3498db', icon: 'fas fa-video', label: 'Cámara' },
+  'TRAFFIC_LIGHT': { color: '#e67e22', icon: 'fas fa-traffic-light', label: 'Semáforo' },
+  'SENSOR': { color: '#9b59b6', icon: 'fas fa-microchip', label: 'Sensor' },
+  'COUNTING_CAMERA': { color: '#16a085', icon: 'fas fa-camera', label: 'Cámara de Conteo' },
+};
+
+function getDeviceConfig(type: string) {
+  return deviceConfig[type] || { color: '#95a5a6', icon: 'fas fa-hdd', label: 'Dispositivo' };
+}
+
+// Colores por estado del dispositivo
+const deviceStatusColors: Record<string, string> = {
+  'ACTIVE': '#28a745',
+  'INACTIVE': '#dc3545',
+  'MAINTENANCE': '#ffc107',
+};
+
+function getDeviceStatusColor(status: string) {
+  return deviceStatusColors[status] || '#6c757d';
+}
+
 // Función para crear iconos personalizados
-function createCustomIcon(type: string, isClosed = false) {
+function createCustomIcon(type: string, isClosed = false, hasOpenTicket = false) {
   const config = getIncidentConfig(type);
   const backgroundColor = isClosed ? '#6c757d' : config.color; // Gris para cerrados
   const opacity = isClosed ? '0.7' : '1';
   
-  const html = `
+  // Agregar badge si tiene ticket abierto
+  const ticketBadge = hasOpenTicket ? `
     <div style="
-      background-color: ${backgroundColor};
-      width: 40px;
-      height: 40px;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #0056b3;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      opacity: ${opacity};
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     ">
-      <i class="${config.icon}" style="color: white; font-size: 20px;"></i>
+      <i class="fas fa-ticket-alt" style="color: white; font-size: 9px;"></i>
+    </div>
+  ` : '';
+  
+  const html = `
+    <div style="position: relative;">
+      <div style="
+        background-color: ${backgroundColor};
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        opacity: ${opacity};
+      ">
+        <i class="${config.icon}" style="color: white; font-size: 20px;"></i>
+      </div>
+      ${ticketBadge}
     </div>
   `;
 
@@ -61,6 +110,49 @@ function createCustomIcon(type: string, isClosed = false) {
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
     className: 'custom-icon'
+  });
+}
+
+// Función para crear iconos de dispositivos
+function createDeviceIcon(type: string, status: string) {
+  const config = getDeviceConfig(type);
+  const statusColor = getDeviceStatusColor(status);
+  
+  const html = `
+    <div style="position: relative;">
+      <div style="
+        background-color: ${config.color};
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      ">
+        <i class="${config.icon}" style="color: white; font-size: 16px;"></i>
+      </div>
+      <div style="
+        position: absolute;
+        bottom: -3px;
+        right: -3px;
+        background-color: ${statusColor};
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      "></div>
+    </div>
+  `;
+
+  return L.divIcon({
+    html: html,
+    iconSize: [35, 35],
+    iconAnchor: [17, 35],
+    popupAnchor: [0, -35],
+    className: 'custom-device-icon'
   });
 }
 
@@ -113,26 +205,143 @@ export default function App() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [, setCurrentTime] = useState(Date.now()); // Para forzar re-render de tiempos
+  const [devices, setDevices] = useState<Device[]>([]);
 
   // Obtener tipos únicos de incidentes
   const incidentTypes = Array.from(new Set(incidents.map(i => i.type))).sort();
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(new Set(incidentTypes));
+  
+  // Device layer visibility
+  const [visibleDeviceTypes, setVisibleDeviceTypes] = useState<Set<string>>(new Set(['CAMERA']));
+
+  const loadDevices = async () => {
+    try {
+      const data = await deviceService.getAllDevices();
+      setDevices(data);
+    } catch (error) {
+      console.error('Error loading devices:', error);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await fetchIncidents({ status: 'active', limit: 200 });
-      // Guardar los incidentes que desaparecieron con timestamp
-      const newClosed = incidents.filter(old => !data.some(n => n.id === old.id)).map(inc => ({
+      
+      // Obtener todos los tickets para verificar cuáles están abiertos
+      let allTickets: any[] = [];
+      try {
+        allTickets = await ticketService.getAllTickets();
+        console.log('=== DEBUG TICKETS ===');
+        console.log('Total tickets cargados:', allTickets.length);
+        console.log('Tickets:', allTickets);
+        
+        // Mostrar tickets con incidentId
+        const ticketsWithIncident = allTickets.filter(t => t.incidentId);
+        console.log('Tickets con incidentId:', ticketsWithIncident.length);
+        ticketsWithIncident.forEach(t => {
+          console.log(`  Ticket ${t.id}: incidentId=${t.incidentId}, status=${t.status}`);
+        });
+      } catch (error) {
+        console.error('ERROR cargando tickets:', error);
+      }
+      
+      console.log('=== DEBUG INCIDENTES ===');
+      console.log('Total incidentes activos:', data.length);
+      console.log('IDs de incidentes:', data.map(i => i.id));
+      
+      // Marcar incidentes que tienen tickets abiertos o en progreso
+      const incidentsWithTicketInfo = data.map(incident => {
+        const relatedTickets = allTickets.filter(t => t.incidentUuid === incident.uuid);
+        const openTickets = relatedTickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS');
+        const hasOpen = openTickets.length > 0;
+        
+        if (relatedTickets.length > 0) {
+          console.log(`Incidente ${incident.id}:`, {
+            totalTickets: relatedTickets.length,
+            openTickets: openTickets.length,
+            hasOpenTicket: hasOpen,
+            tickets: relatedTickets.map(t => ({ id: t.id, status: t.status }))
+          });
+        }
+        
+        return {
+          ...incident,
+          hasOpenTicket: hasOpen,
+          ticketCount: relatedTickets.length
+        };
+      });
+      
+      console.log('Incidentes con info de tickets:', incidentsWithTicketInfo.filter(i => i.hasOpenTicket).length);
+      
+      // Buscar tickets con incidentUuid que no estén en los incidentes activos
+      const orphanTicketUuids = allTickets
+        .filter(t => t.incidentUuid && (t.status === 'OPEN' || t.status === 'IN_PROGRESS'))
+        .map(t => t.incidentUuid)
+        .filter(uuid => !data.some(inc => inc.uuid === uuid));
+      
+      console.log('UUIDs de incidentes con tickets pero no activos en Waze:', orphanTicketUuids);
+      
+      // Cargar incidentes huérfanos (con tickets pero no activos en Waze)
+      const orphanIncidents: Incident[] = [];
+      for (const uuid of orphanTicketUuids) {
+        try {
+          // Buscar en incidentes previos primero
+          const prevIncident = incidents.find(i => i.uuid === uuid);
+          const incident = prevIncident || await getIncidentByUuid(uuid);
+          if (incident) {
+            const relatedTickets = allTickets.filter(t => t.incidentUuid === uuid);
+            const openTickets = relatedTickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS');
+            orphanIncidents.push({
+              ...incident,
+              status: 'inactive',
+              hasOpenTicket: openTickets.length > 0,
+              ticketCount: relatedTickets.length
+            });
+            console.log(`Incidente huérfano recuperado: ${uuid}`);
+          }
+        } catch (error) {
+          console.warn(`No se pudo cargar incidente huérfano ${uuid}`, error);
+        }
+      }
+      
+      // Mantener incidentes previos con tickets abiertos aunque hayan desaparecido de Waze
+      const incidentsWithOpenTickets = incidents.filter(old => {
+        const stillActive = data.some(n => n.uuid === old.uuid);
+        const hasOpenTicket = orphanTicketUuids.includes(old.uuid) || old.hasOpenTicket;
+        return !stillActive && hasOpenTicket;
+      }).map(inc => {
+        const relatedTickets = allTickets.filter(t => t.incidentUuid === inc.uuid);
+        const openTickets = relatedTickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS');
+        return {
+          ...inc,
+          status: 'inactive',
+          hasOpenTicket: openTickets.length > 0,
+          ticketCount: relatedTickets.length
+        };
+      });
+      
+      console.log('Incidentes inactivos pero con tickets abiertos a mantener:', incidentsWithOpenTickets.length);
+      
+      // Combinar incidentes activos + huérfanos recuperados + previos con tickets
+      const allIncidents = [...incidentsWithTicketInfo, ...orphanIncidents, ...incidentsWithOpenTickets];
+      
+      // Guardar los incidentes que desaparecieron SIN tickets abiertos
+      const newClosed = incidents.filter(old => {
+        const stillActive = data.some(n => n.id === old.id);
+        return !stillActive && !old.hasOpenTicket;
+      }).map(inc => ({
         ...inc,
         closedAt: new Date().toISOString(),
         closedBy: 'Waze'
       }));
+      
       if (newClosed.length > 0) {
         setClosedIncidents(prev => [...newClosed, ...prev].slice(0, 100));
       }
-      setIncidents(data);
+      
+      setIncidents(allIncidents);
     } catch (e) {
       console.error(e);
       const errorMsg = e instanceof Error ? e.message : String(e);
@@ -142,9 +351,10 @@ export default function App() {
     }
   };
 
-  // Cargar incidentes al inicio
+  // Cargar incidentes y dispositivos al inicio
   useEffect(() => {
     load();
+    loadDevices();
   }, []);
 
   // Auto-refresh periódico
@@ -172,6 +382,16 @@ export default function App() {
       setVisibleLayers(new Set(['ACCIDENT']));
     }
   }, [incidentTypes]);
+
+  const toggleDeviceLayer = (type: string) => {
+    const newLayers = new Set(visibleDeviceTypes);
+    if (newLayers.has(type)) {
+      newLayers.delete(type);
+    } else {
+      newLayers.add(type);
+    }
+    setVisibleDeviceTypes(newLayers);
+  };
 
   const toggleLayer = (type: string) => {
     const newLayers = new Set(visibleLayers);
@@ -227,15 +447,33 @@ export default function App() {
               <i className="fas fa-map me-2"></i>
               Mapa
             </button>
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              style={{ fontSize: '14px' }}
+              onClick={() => navigate('/dashboard')}
+            >
+              <i className="fas fa-chart-line me-2"></i>
+              Dashboard
+            </button>
             {isOperator && (
-              <button 
-                className="btn btn-sm btn-outline-primary"
-                style={{ fontSize: '14px' }}
-                onClick={() => navigate('/tickets')}
-              >
-                <i className="fas fa-ticket-alt me-2"></i>
-                Tickets
-              </button>
+              <>
+                <button 
+                  className="btn btn-sm btn-outline-primary"
+                  style={{ fontSize: '14px' }}
+                  onClick={() => navigate('/tickets')}
+                >
+                  <i className="fas fa-ticket-alt me-2"></i>
+                  Tickets
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-primary"
+                  style={{ fontSize: '14px' }}
+                  onClick={() => navigate('/reports')}
+                >
+                  <i className="fas fa-file-alt me-2"></i>
+                  Reportes
+                </button>
+              </>
             )}
             {isAdmin && (
               <button 
@@ -484,6 +722,11 @@ export default function App() {
               <i className="fas fa-layer-group"></i>
               Capas
             </div>
+            
+            {/* Incidentes */}
+            <div style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '12px', marginBottom: '6px', color: '#495057' }}>
+              Incidentes
+            </div>
             {incidentTypes.map((type) => {
               const count = allIncidents.filter(i => i.type === type).length;
               const isVisible = visibleLayers.has(type);
@@ -503,6 +746,30 @@ export default function App() {
                 </div>
               );
             })}
+            
+            {/* Periféricos */}
+            <div style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '12px', marginBottom: '6px', color: '#495057' }}>
+              Periféricos
+            </div>
+            {Object.keys(deviceConfig).map((type) => {
+              const count = devices.filter(d => d.type === type).length;
+              const isVisible = visibleDeviceTypes.has(type);
+              const config = getDeviceConfig(type);
+              return (
+                <div key={type} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={isVisible}
+                    onChange={() => toggleDeviceLayer(type)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <i className={config.icon} style={{ color: config.color, fontSize: '14px' }}></i>
+                  <span style={{ fontSize: '12px', flex: 1 }}>
+                    {config.label} ({count})
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           <MapContainer
@@ -511,14 +778,15 @@ export default function App() {
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
-              attribution="&copy; OpenStreetMap contributors"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Datos de incidentes: <a href="https://www.waze.com">Waze</a>&reg;'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
             {filteredIncidents.map((i) => {
               const isClosed = !!i.closedAt;
+              const hasOpenTicket = i.hasOpenTicket || false;
               return (
-                <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type, isClosed)}>
+                <Marker key={i.id} position={[i.lat, i.lon]} icon={createCustomIcon(i.type, isClosed, hasOpenTicket)}>
                   <Popup>
                     <div style={{ fontSize: '12px' }}>
                       <strong>{getTypeInSpanish(i.type)}</strong> ({formatCategory(i.category)})
@@ -533,6 +801,15 @@ export default function App() {
                       Prioridad: {i.priority ?? '-'}
                       <br />
                       Confiabilidad: {i.reliability ?? '-'}
+                      {hasOpenTicket && (
+                        <>
+                          <br />
+                          <span style={{ color: '#0056b3', fontWeight: 'bold' }}>
+                            <i className="fas fa-ticket-alt me-1"></i>
+                            CON TICKET ABIERTO
+                          </span>
+                        </>
+                      )}
                       {isClosed && (
                         <>
                           <br />
@@ -549,16 +826,84 @@ export default function App() {
                       {isOperator && !isClosed && (
                         <>
                           <br />
+                          {hasOpenTicket || (i.ticketCount && i.ticketCount > 0) ? (
+                            <button
+                              className="btn btn-sm btn-success mt-2 w-100"
+                              onClick={() => {
+                                // Navegar a la página de tickets
+                                navigate('/tickets');
+                              }}
+                              style={{ fontSize: '11px' }}
+                            >
+                              <i className="fas fa-eye me-1"></i>
+                              Ver Ticket{(i.ticketCount && i.ticketCount > 1) ? 's' : ''}
+                            </button>
+                          ) : (
+                            <button
+                              className="btn btn-sm btn-primary mt-2 w-100"
+                              onClick={() => {
+                                // Navegar a tickets con el incidentId en el query
+                                navigate(`/tickets?createFor=${i.uuid}`);
+                              }}
+                              style={{ fontSize: '11px' }}
+                            >
+                              <i className="fas fa-plus me-1"></i>
+                              Crear Ticket
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+            
+            {/* Device Markers */}
+            {devices.filter(d => visibleDeviceTypes.has(d.type)).map((device) => {
+              const config = getDeviceConfig(device.type);
+              const statusLabel = device.status === 'ACTIVE' ? 'Activo' : device.status === 'INACTIVE' ? 'Inactivo' : 'Mantenimiento';
+              return (
+                <Marker 
+                  key={`device-${device.id}`} 
+                  position={[device.latitude, device.longitude]} 
+                  icon={createDeviceIcon(device.type, device.status)}
+                >
+                  <Popup>
+                    <div style={{ fontSize: '12px' }}>
+                      <strong>{config.label}</strong>
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#6c757d' }}>ID: {device.id}</span>
+                      <br />
+                      <br />
+                      <strong>Marca:</strong> {device.brand}
+                      <br />
+                      <strong>Estado:</strong> <span style={{ color: getDeviceStatusColor(device.status), fontWeight: 'bold' }}>{statusLabel}</span>
+                      <br />
+                      <strong>Año instalación:</strong> {device.installationYear}
+                      <br />
+                      <strong>Año fabricación:</strong> {device.manufacturingYear}
+                      <br />
+                      <strong>IP:</strong> {device.ipAddress}
+                      <br />
+                      <strong>Usuario:</strong> {device.username}
+                      <br />
+                      <br />
+                      <span style={{ fontSize: '11px', color: '#6c757d' }}>
+                        Lat: {device.latitude.toFixed(6)}, Lng: {device.longitude.toFixed(6)}
+                      </span>
+                      {isAdmin && (
+                        <>
+                          <br />
                           <button
                             className="btn btn-sm btn-primary mt-2 w-100"
                             onClick={() => {
-                              // Navegar a tickets con el incidentId en el query
-                              navigate(`/tickets?createFor=${i.id}`);
+                              navigate('/admin?tab=devices');
                             }}
                             style={{ fontSize: '11px' }}
                           >
-                            <i className="fas fa-plus me-1"></i>
-                            Crear Ticket
+                            <i className="fas fa-edit me-1"></i>
+                            Administrar
                           </button>
                         </>
                       )}

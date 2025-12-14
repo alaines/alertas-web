@@ -30,6 +30,15 @@ class TicketService {
   }
 
   /**
+   * Obtener todos los tickets sin filtros
+   * Útil para verificar tickets asociados a incidentes
+   */
+  async getAllTickets(): Promise<Ticket[]> {
+    const response = await api.get('/tickets');
+    return response.data;
+  }
+
+  /**
    * Obtener un ticket por ID con su incidente y eventos
    * Todos los usuarios autenticados
    */

@@ -1,6 +1,6 @@
-# Alertas Viales Web
+# Alertas Viales Web v1.1
 
-Sistema completo de monitoreo de alertas viales en tiempo real con autenticación JWT, gestión de usuarios y panel de administración. Visualiza incidentes de Waze en un mapa interactivo con auto-refresh y notificaciones.
+Sistema completo de monitoreo de alertas viales en tiempo real con autenticación JWT, gestión de usuarios, sistema de tickets, dashboard de estadísticas, reportes exportables y soporte multiidioma. Visualiza incidentes de Waze y periféricos de vía en un mapa interactivo con auto-refresh y notificaciones.
 
 ## Características
 
@@ -11,6 +11,21 @@ Sistema completo de monitoreo de alertas viales en tiempo real con autenticació
 - **Información detallada** - Tipo, ubicación, prioridad, confiabilidad, tiempo transcurrido
 - **Notificaciones** - Alertas de incidentes recientemente cerrados (últimos 5 min)
 - **Timestamps dinámicos** - Actualización automática de tiempos relativos
+- **Indicadores de tickets** - Badge azul en incidentes con tickets abiertos
+- **Botones contextuales** - "Ver Ticket" o "Crear Ticket" según corresponda
+- **Asociación por UUID** - Tickets vinculados a incidentes mediante UUID de Waze
+- **Atribución de datos** - Créditos a Waze® y OpenStreetMap
+
+### Gestión de Periféricos (Admin)
+- **CRUD completo** - Crear, editar, eliminar dispositivos de vía
+- **Tipos de dispositivos** - Cámara, Semáforo, Sensor, Cámara de Conteo
+- **Estados operativos** - Activo, Inactivo, Mantenimiento
+- **Ubicación geográfica** - Selector de ubicación en mapa interactivo (click-to-select)
+- **Datos técnicos** - Marca, años de instalación/fabricación, IP, credenciales
+- **Visualización en mapa** - Marcadores diferenciados por tipo y color por estado
+- **Filtros de capas** - Mostrar/ocultar dispositivos por tipo en el mapa
+- **Información detallada** - Popup con todos los datos del dispositivo
+- **Acceso restringido** - Solo administradores pueden gestionar dispositivos
 
 ### Autenticación y Seguridad
 - **JWT Authentication** - Sistema seguro con tokens y refresh automático
@@ -35,16 +50,52 @@ Sistema completo de monitoreo de alertas viales en tiempo real con autenticació
 - **Creación desde mapa** - Botón directo en cada incidente para crear ticket
 - **Estadísticas visuales** - Dashboard con contadores por estado
 - **Control de permisos** - Solo OPERATOR y ADMIN pueden crear/modificar tickets
+- **Múltiples fuentes** - WAZE, PHONE_CALL, WHATSAPP, INSPECTOR, OTHER
+- **Paginación** - Visualización de 15 tickets por página
+- **Vinculación UUID** - Asociación con incidentes mediante UUID único
+
+### Dashboard de Estadísticas
+- **Métricas en tiempo real** - Incidentes activos, tickets abiertos, en progreso
+- **Tiempo promedio de resolución** - Cálculo automático en horas
+- **Períodos personalizables** - Hoy, Última Semana, Último Mes
+- **Gráficos de estado** - Barras de progreso para tickets
+- **Distribución de incidentes** - Por tipo con contadores
+- **Estado de dispositivos** - Activos, en mantenimiento, inactivos
+- **Actividad reciente** - Últimos tickets creados con timestamp
+- **Agrupación por prioridad** - Distribución de tickets por nivel
+
+### Sistema de Reportes (Operator y Admin)
+- **3 tipos de reportes** - Incidentes, Tickets, Dispositivos
+- **Filtros por fecha** - Rango personalizable de inicio y fin
+- **Exportación a Excel** - Formato .xlsx con todas las columnas
+- **Exportación a PDF** - Tablas formateadas con encabezados
+- **Vista previa de datos** - Tabla interactiva antes de exportar
+- **Contador de registros** - Total de registros en el reporte
+- **Datos completos** - Incluye todos los campos relevantes
+- **Reporte de incidentes** - Tipo, ubicación, prioridad, confiabilidad, fecha/hora
+- **Reporte de tickets** - Estado, prioridad, tiempos de resolución, asignaciones
+- **Reporte de dispositivos** - Inventario completo con estado operativo
+
+### Soporte Multiidioma 🌐
+- **Español e Inglés** - Sistema completamente bilingüe
+- **Configuración persistente** - Idioma guardado en localStorage
+- **Interfaz completa traducida** - Dashboard, Reportes, Navegación
+- **Reportes localizados** - Columnas y datos exportados en idioma seleccionado
+- **Cambio instantáneo** - Sin necesidad de recargar la página
+- **Configuración en Admin** - Selector de idioma en panel de configuración
+- **99+ traducciones** - Todas las etiquetas y mensajes del sistema
 
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript
-- **Build**: Vite 7
+- **Build**: Vite 7.2.7
 - **Mapas**: Leaflet + react-leaflet
 - **Styling**: Bootstrap 5 + Font Awesome 6
 - **HTTP Client**: Axios con interceptores JWT
 - **Routing**: React Router DOM
 - **Auth**: JWT (JSON Web Tokens)
+- **Exportación**: xlsx (Excel), jsPDF + jspdf-autotable (PDF)
+- **Internacionalización**: Context API con soporte ES/EN
 - **Linting**: ESLint
 
 ## Requisitos Previos
@@ -88,11 +139,11 @@ Rol: ADMIN
 4. Asignar roles según necesidades
 
 ### Roles y Permisos
-| Rol          |   Mapa   |  Incidentes |    Tickets    |    Panel Admin   | Gestión Usuarios |
-|--------------|----------|-------------|---------------|------------------|------------------|
-| **VIEWER**   |    SI    |    SI Ver   |       NO      |        NO        |       NO         |
-| **OPERATOR** |    SI    |    SI Ver   |    SI Crear   |        NO        |       NO         |
-| **ADMIN**    |    SI    |    SI Ver   |    SI Crear   |        SI        |       SI         |
+| Rol          |   Mapa   |  Incidentes |    Tickets    |  Dashboard  |   Reportes  |  Dispositivos  |  Panel Admin | Gestión Usuarios |
+|--------------|----------|-------------|---------------|-------------|-------------|----------------|--------------|------------------|
+| **VIEWER**   |    SI    |    SI Ver   |       NO      |      SI     |      NO     |      Ver       |      NO      |       NO         |
+| **OPERATOR** |    SI    |    SI Ver   |    SI Crear   |      SI     |      SI     |      Ver       |      NO      |       NO         |
+| **ADMIN**    |    SI    |    SI Ver   |    SI Crear   |      SI     |      SI     |    SI CRUD     |      SI      |       SI         |
 
 ### Uso del Sistema de Tickets
 
@@ -202,8 +253,10 @@ alertas-web/
 | Ruta | Acceso | Descripción |
 |------|--------|-------------|
 | `/login` | Público | Página de autenticación |
-| `/map` | Autenticado | Mapa de incidentes con filtros |
+| `/map` | Autenticado | Mapa de incidentes con filtros y periféricos |
+| `/dashboard` | Autenticado | Dashboard con estadísticas y métricas |
 | `/tickets` | OPERATOR/ADMIN | Sistema de gestión de tickets |
+| `/reports` | OPERATOR/ADMIN | Generación y exportación de reportes |
 | `/admin` | Solo ADMIN | Panel de administración completo |
 
 ### API Endpoints Utilizados
@@ -219,6 +272,7 @@ DELETE /api/v1/users/{id}              Eliminar usuario (ADMIN)
 
 Incidents:
 GET    /api/v1/incidents               Listar incidentes activos
+GET    /api/v1/incidents/uuid/{uuid}   Obtener incidente por UUID
 
 Tickets:
 POST   /api/v1/tickets                 Crear ticket (OPERATOR/ADMIN)
@@ -228,6 +282,14 @@ PATCH  /api/v1/tickets/{id}            Actualizar ticket (OPERATOR/ADMIN)
 POST   /api/v1/tickets/{id}/status     Cambiar estado (OPERATOR/ADMIN)
 POST   /api/v1/tickets/{id}/comments   Agregar comentario (OPERATOR/ADMIN)
 GET    /api/v1/tickets/{id}/events     Obtener historial de eventos
+
+Devices:
+GET    /api/v1/devices                 Listar dispositivos
+GET    /api/v1/devices/{id}            Obtener dispositivo
+POST   /api/v1/devices                 Crear dispositivo (ADMIN)
+PATCH  /api/v1/devices/{id}            Actualizar dispositivo (ADMIN)
+DELETE /api/v1/devices/{id}            Eliminar dispositivo (ADMIN)
+PATCH  /api/v1/devices/{id}/status     Cambiar estado dispositivo (ADMIN)
 ```
 POST   /api/v1/auth/login              Login con email/password
 
