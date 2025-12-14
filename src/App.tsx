@@ -168,7 +168,8 @@ export default function App() {
   // Inicializar capas visibles cuando se cargan los incidentes
   useEffect(() => {
     if (incidentTypes.length > 0 && visibleLayers.size === 0) {
-      setVisibleLayers(new Set(incidentTypes));
+      // Por defecto solo mostrar ACCIDENT
+      setVisibleLayers(new Set(['ACCIDENT']));
     }
   }, [incidentTypes]);
 
