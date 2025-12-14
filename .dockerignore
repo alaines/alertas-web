@@ -1,0 +1,5 @@
+# Ignorar archivos de deployment
+.env.production
+.env.local
+*.log
+deploy-*.tar.gz
