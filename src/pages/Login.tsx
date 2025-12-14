@@ -90,9 +90,10 @@ export default function Login() {
           borderRadius: '16px',
           zIndex: 2,
           margin: '20px',
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)'
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
         }}
       >
         <div className="p-4 p-md-5">
@@ -103,19 +104,20 @@ export default function Login() {
                 width: '80px',
                 height: '80px',
                 margin: '0 auto 20px',
-                backgroundColor: '#0056b3',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                border: '3px solid rgba(255, 255, 255, 0.5)'
               }}
             >
-              <i className="fas fa-map-marker-alt" style={{ fontSize: '40px', color: 'white' }}></i>
+              <i className="fas fa-map-marker-alt" style={{ fontSize: '40px', color: '#0056b3' }}></i>
             </div>
-            <h2 className="mb-2" style={{ fontWeight: '700', color: '#0056b3' }}>
+            <h2 className="mb-2" style={{ fontWeight: '700', color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               Sistema de Alertas
             </h2>
-            <p className="text-muted mb-0">Ingresa tus credenciales para continuar</p>
+            <p className="mb-0" style={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>Ingresa tus credenciales para continuar</p>
           </div>
 
           {/* Formulario */}
@@ -130,7 +132,7 @@ export default function Login() {
 
             {/* Username */}
             <div className="mb-3">
-              <label htmlFor="username" className="form-label fw-semibold">
+              <label htmlFor="username" className="form-label fw-semibold" style={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
                 <i className="fas fa-user me-2"></i>
                 Usuario
               </label>
@@ -149,7 +151,7 @@ export default function Login() {
 
             {/* Contraseña */}
             <div className="mb-3">
-              <label htmlFor="password" className="form-label fw-semibold">
+              <label htmlFor="password" className="form-label fw-semibold" style={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
                 <i className="fas fa-lock me-2"></i>
                 Contraseña
               </label>
@@ -193,13 +195,14 @@ export default function Login() {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
-                <label className="form-check-label small" htmlFor="rememberMe">
+                <label className="form-check-label small" htmlFor="rememberMe" style={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
                   Recordar contraseña
                 </label>
               </div>
               <a 
                 href="#" 
                 className="small text-decoration-none"
+                style={{ color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.8)', fontWeight: '500' }}
                 onClick={(e) => {
                   e.preventDefault();
                   setShowForgotModal(true);
@@ -222,8 +225,8 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <div className="text-center mt-4 pt-3 border-top">
-            <p className="text-muted small mb-0">
+          <div className="text-center mt-4 pt-3" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.3)' }}>
+            <p className="small mb-0" style={{ color: 'rgba(255, 255, 255, 0.9)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
               © 2025 Sistema de Alertas - Todos los derechos reservados
             </p>
           </div>
