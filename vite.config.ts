@@ -12,5 +12,20 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks - bibliotecas grandes separadas
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'leaflet-vendor': ['leaflet', 'react-leaflet'],
+          'pdf-vendor': ['jspdf', 'jspdf-autotable', 'html2canvas'],
+          'excel-vendor': ['xlsx'],
+          'ui-vendor': ['bootstrap'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600
   }
 })
