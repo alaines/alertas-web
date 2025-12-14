@@ -10,13 +10,17 @@ export type TicketEventType =
   | 'UNASSIGNED' 
   | 'CLOSED';
 
+export type TicketSource = 'WAZE' | 'PHONE_CALL' | 'WHATSAPP' | 'INSPECTOR' | 'OTHER';
+
 export interface Ticket {
   id: number;
-  incidentId: number;
+  incidentId: number | null;
   title: string;
   description: string | null;
   status: TicketStatus;
   priority: number | null;
+  source: TicketSource;
+  incidentType: string | null;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -48,11 +52,13 @@ export interface TicketEvent {
 }
 
 export interface CreateTicketDto {
-  incidentId: number;
+  incidentId?: number | null;
   title: string;
   description?: string;
   priority?: number;
   assignedTo?: string;
+  source: TicketSource;
+  incidentType?: string;
 }
 
 export interface UpdateTicketDto {

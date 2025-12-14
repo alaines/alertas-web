@@ -21,11 +21,13 @@ export default function Tickets() {
 
   // Form states
   const [createForm, setCreateForm] = useState<CreateTicketDto>({
-    incidentId: 0,
+    incidentId: null,
     title: '',
     description: '',
     priority: 3,
-    assignedTo: ''
+    assignedTo: '',
+    source: 'OTHER' as const,
+    incidentType: ''
   });
   const [commentText, setCommentText] = useState('');
   const [statusChangeData, setStatusChangeData] = useState<ChangeTicketStatusDto>({ status: 'OPEN' as TicketStatus, message: '' });
@@ -41,7 +43,9 @@ export default function Tickets() {
         title: '',
         description: '',
         priority: 3,
-        assignedTo: ''
+        assignedTo: '',
+        source: 'WAZE' as const,
+        incidentType: ''
       });
       setShowCreateModal(true);
       // Limpiar el query param
@@ -73,8 +77,24 @@ export default function Tickets() {
   };
 
   const handleCreateTicket = async () => {
-    if (!createForm.title || !createForm.incidentId) {
-      alert('El título y el ID del incidente son obligatorios');
+    // Validaciones
+    if (!createForm.title) {
+      alert('El título es obligatorio');
+      return;
+    }
+    
+    if (!createForm.incidentType) {
+      alert('El tipo de incidente es obligatorio');
+      return;
+    }
+    
+    if (!createForm.source) {
+      alert('La fuente es obligatoria');
+      return;
+    }
+    
+    if (createForm.source === 'WAZE' && !createForm.incidentId) {
+      alert('El ID del incidente es obligatorio cuando la fuente es WAZE');
       return;
     }
 
@@ -82,11 +102,13 @@ export default function Tickets() {
       await ticketService.createTicket(createForm);
       setShowCreateModal(false);
       setCreateForm({
-        incidentId: 0,
+        incidentId: null,
         title: '',
         description: '',
         priority: 3,
-        assignedTo: ''
+        assignedTo: '',
+        source: 'OTHER' as const,
+        incidentType: ''
       });
       loadTickets();
     } catch (err: any) {
@@ -363,6 +385,8 @@ export default function Tickets() {
                     <tr>
                       <th>ID</th>
                       <th>Título</th>
+                      <th>Fuente</th>
+                      <th>Tipo</th>
                       <th>Incidente</th>
                       <th>Estado</th>
                       <th>Prioridad</th>
@@ -384,9 +408,36 @@ export default function Tickets() {
                           )}
                         </td>
                         <td>
-                          <span className="badge bg-secondary">
-                            Incidente #{ticket.incidentId}
+                          <span className={`badge ${
+                            ticket.source === 'WAZE' ? 'bg-info' :
+                            ticket.source === 'PHONE_CALL' ? 'bg-success' :
+                            ticket.source === 'WHATSAPP' ? 'bg-primary' :
+                            ticket.source === 'INSPECTOR' ? 'bg-warning' :
+                            'bg-secondary'
+                          }`}>
+                            <i className={`fas ${
+                              ticket.source === 'WAZE' ? 'fa-map-marked-alt' :
+                              ticket.source === 'PHONE_CALL' ? 'fa-phone' :
+                              ticket.source === 'WHATSAPP' ? 'fa-whatsapp' :
+                              ticket.source === 'INSPECTOR' ? 'fa-user-shield' :
+                              'fa-clipboard'
+                            } me-1`}></i>
+                            {ticket.source}
                           </span>
+                        </td>
+                        <td>
+                          <span className="text-muted small">
+                            {ticket.incidentType}
+                          </span>
+                        </td>
+                        <td>
+                          {ticket.incidentId ? (
+                            <span className="badge bg-secondary">
+                              Incidente #{ticket.incidentId}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">N/A</span>
+                          )}
                         </td>
                         <td>
                           <span className={`badge ${getStatusBadge(ticket.status)}`}>
@@ -444,20 +495,52 @@ export default function Tickets() {
               <div className="modal-body">
                 <div className="alert alert-info mb-3">
                   <i className="fas fa-info-circle me-2"></i>
-                  <strong>Nota:</strong> Para crear un ticket, el incidente debe existir en el sistema. 
-                  Puedes obtener el ID desde el mapa haciendo clic en un incidente y usando el botón "Crear Ticket".
+                  <strong>Nota:</strong> El ID del incidente es obligatorio solo cuando la fuente es WAZE. 
+                  Para otras fuentes, puedes crear el ticket sin vincular a un incidente específico.
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">ID del Incidente *</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={createForm.incidentId || ''}
-                    onChange={(e) => setCreateForm({ ...createForm, incidentId: parseInt(e.target.value) || 0 })}
-                    placeholder="Ej: 123"
-                  />
-                  <small className="text-muted">Ingresa el ID de un incidente existente en el mapa</small>
+                  <label className="form-label">Fuente *</label>
+                  <select
+                    className="form-select"
+                    value={createForm.source}
+                    onChange={(e) => setCreateForm({ 
+                      ...createForm, 
+                      source: e.target.value as 'WAZE' | 'PHONE_CALL' | 'WHATSAPP' | 'INSPECTOR' | 'OTHER',
+                      incidentId: e.target.value !== 'WAZE' ? null : createForm.incidentId
+                    })}
+                  >
+                    <option value="WAZE">Waze (Mapa)</option>
+                    <option value="PHONE_CALL">Llamada Telefónica</option>
+                    <option value="WHATSAPP">WhatsApp</option>
+                    <option value="INSPECTOR">Inspector</option>
+                    <option value="OTHER">Otros</option>
+                  </select>
+                  <small className="text-muted">Selecciona el origen del reporte</small>
                 </div>
+                <div className="mb-3">
+                  <label className="form-label">Tipo de Incidente *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={createForm.incidentType}
+                    onChange={(e) => setCreateForm({ ...createForm, incidentType: e.target.value })}
+                    placeholder="Ej: Accidente, Bache, Señalización, etc."
+                  />
+                  <small className="text-muted">Describe el tipo de problema reportado</small>
+                </div>
+                {createForm.source === 'WAZE' && (
+                  <div className="mb-3">
+                    <label className="form-label">ID del Incidente *</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={createForm.incidentId || ''}
+                      onChange={(e) => setCreateForm({ ...createForm, incidentId: parseInt(e.target.value) || null })}
+                      placeholder="Ej: 123"
+                    />
+                    <small className="text-muted">Ingresa el ID de un incidente existente en el mapa</small>
+                  </div>
+                )}
                 <div className="mb-3">
                   <label className="form-label">Título *</label>
                   <input
@@ -554,6 +637,33 @@ export default function Tickets() {
                             <span className={`badge ${getPriorityBadge(selectedTicket.priority)}`}>
                               Prioridad {selectedTicket.priority ?? 0}
                             </span>
+                          </div>
+                        </div>
+                        <div className="row mb-2">
+                          <div className="col-sm-3 text-muted">Fuente:</div>
+                          <div className="col-sm-9">
+                            <span className={`badge ${
+                              selectedTicket.source === 'WAZE' ? 'bg-info' :
+                              selectedTicket.source === 'PHONE_CALL' ? 'bg-success' :
+                              selectedTicket.source === 'WHATSAPP' ? 'bg-primary' :
+                              selectedTicket.source === 'INSPECTOR' ? 'bg-warning' :
+                              'bg-secondary'
+                            }`}>
+                              <i className={`fas ${
+                                selectedTicket.source === 'WAZE' ? 'fa-map-marked-alt' :
+                                selectedTicket.source === 'PHONE_CALL' ? 'fa-phone' :
+                                selectedTicket.source === 'WHATSAPP' ? 'fa-whatsapp' :
+                                selectedTicket.source === 'INSPECTOR' ? 'fa-user-shield' :
+                                'fa-clipboard'
+                              } me-1`}></i>
+                              {selectedTicket.source}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="row mb-2">
+                          <div className="col-sm-3 text-muted">Tipo de Incidente:</div>
+                          <div className="col-sm-9">
+                            <strong>{selectedTicket.incidentType}</strong>
                           </div>
                         </div>
                         <div className="row mb-2">
