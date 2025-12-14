@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "preview:prod": "vite preview --host 0.0.0.0 --port 8080",
-    "deploy": "bash deploy.sh"
+    "deploy": "bash deploy.sh",
+    "deploy:gcp": "sudo bash deploy-gcp.sh"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
